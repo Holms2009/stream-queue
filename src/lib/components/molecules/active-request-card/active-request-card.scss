@@ -1,0 +1,94 @@
+@use '/src/lib/styles/index' as *;
+
+.active-request-card {
+	padding: 8px 12px;
+	display: flex;
+	flex-direction: column;
+
+	background: linear-gradient(to top, $COLOR_BLUE_1, $COLOR_BLUE_1_HOVER);
+	border-radius: $RADIUS_MEDIUM;
+
+	@media screen and (min-width: $BREAKPOINT_SM) {
+		padding: 12px 16px;
+
+		background: linear-gradient(to left, $COLOR_BLUE_1, $COLOR_BLUE_1_HOVER);
+	}
+
+	&__header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+	}
+
+	&__label {
+		@include text-14;
+
+		font-weight: 700;
+
+		@media screen and (min-width: $BREAKPOINT_SM) {
+			@include text-16;
+		}
+	}
+
+	&__title {
+		@include heading-5;
+
+		margin-top: 8px;
+
+		@media screen and (min-width: $BREAKPOINT_SM) {
+			@include heading-4;
+
+			margin-top: 12px;
+		}
+	}
+
+	&__author {
+		@include text-14;
+
+		color: $COLOR_BLACK_2;
+
+		@media screen and (min-width: $BREAKPOINT_SM) {
+			@include text-16;
+		}
+	}
+
+	&__buttons {
+		margin-top: 12px;
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+
+		@media screen and (min-width: $BREAKPOINT_SM) {
+			margin-top: 16px;
+			flex-direction: row;
+		}
+	}
+}
+
+:global {
+	.active-request-card {
+		&__icon {
+			animation: iconRotate 2s linear infinite;
+		}
+
+		&__button {
+			width: 100% !important;
+
+			&:last-child {
+				@media screen and (min-width: $BREAKPOINT_SM) {
+					max-width: 30%;
+				}
+			}
+		}
+
+		&__checkmark {
+			margin-bottom: 2px;
+		}
+	}
+}
+
+@keyframes iconRotate {
+	to {
+		transform: rotate(1turn);
+	}
+}

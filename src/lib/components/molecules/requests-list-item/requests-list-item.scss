@@ -1,0 +1,84 @@
+@use '/src/lib/styles/index' as *;
+
+.requests-list-item {
+	padding: 8px;
+	display: flex;
+	align-items: center;
+
+	border: 1px solid $COLOR_GRAY_1;
+	border-radius: $RADIUS_SMALL;
+
+	transition: all 0.3s ease;
+
+	&:hover {
+		border-color: $COLOR_GRAY_2;
+	}
+
+	&__index {
+		@include heading-5;
+
+		width: 30px;
+
+		color: $COLOR_GRAY_1;
+		text-align: center;
+	}
+
+	&__text-wrapper {
+		margin-left: 12px;
+	}
+
+	&__title {
+		@include heading-6;
+	}
+
+	&__author {
+		@include text-12;
+
+		color: $COLOR_GRAY_2;
+	}
+
+	&__controls {
+		margin-left: auto;
+		display: flex;
+		align-items: center;
+	}
+
+	&__position-btns {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	&__move {
+		padding: 0;
+		width: 20px;
+		height: 20px;
+
+		color: $COLOR_GRAY_2;
+
+		background: unset;
+		border: none;
+
+		cursor: pointer;
+	}
+
+	&__to-end {
+		@include text-12;
+
+		margin-left: 8px;
+		padding: 4px 8px;
+
+		color: $COLOR_GRAY_2;
+
+		background: unset;
+		border: 1px solid $COLOR_GRAY_1;
+		border-radius: 50px;
+
+		transition: all 0.3s ease;
+		cursor: pointer;
+
+		&:hover {
+			border-color: $COLOR_GRAY_2;
+		}
+	}
+}

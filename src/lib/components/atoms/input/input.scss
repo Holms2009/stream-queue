@@ -1,0 +1,61 @@
+@use '/src/lib/styles/index' as *;
+
+.input {
+	position: relative;
+
+	&:hover &__field:not(:focus) {
+		border-color: $COLOR_GRAY_2;
+	}
+
+	&__field {
+		@include text-16;
+
+		padding: 7px 44px 7px 16px;
+		width: 100%;
+		height: fit-content;
+
+		color: $COLOR_WHITE_1;
+
+		background: none;
+		border: 1px solid $COLOR_GRAY_1;
+		border-radius: 100px;
+
+		transition: all 0.3s ease;
+
+		&:focus {
+			border-color: $COLOR_BLUE_1;
+		}
+	}
+
+	&_error &__field {
+		border-color: $COLOR_RED_1 !important;
+	}
+
+	&__show-hide {
+		all: unset;
+
+		position: absolute;
+		top: 8px;
+		right: 16px;
+
+		width: 20px;
+		height: 20px;
+
+		color: $COLOR_GRAY_1;
+
+		transition: color 0.3s ease;
+		cursor: pointer;
+
+		&:hover {
+			color: $COLOR_GRAY_2;
+		}
+	}
+
+	&__error {
+		@include text-12;
+
+		margin-top: 4px;
+		padding: 0 16px;
+		color: $COLOR_RED_1;
+	}
+}

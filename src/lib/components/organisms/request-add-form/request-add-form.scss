@@ -1,0 +1,46 @@
+@use '/src/lib/styles/index' as *;
+
+.request-add-form {
+	&__title {
+		@include heading-5;
+	}
+
+	&__inputs-wrapper {
+		margin-top: 12px;
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: 16px;
+
+		@media screen and (min-width: $BREAKPOINT_SM) {
+			grid-template-columns: repeat(6, 1fr);
+		}
+	}
+}
+
+:global {
+	.request-add-form {
+		&__title-input {
+			@media screen and (min-width: $BREAKPOINT_SM) {
+				grid-column: span 6;
+			}
+		}
+
+		&__name-input {
+			@media screen and (min-width: $BREAKPOINT_SM) {
+				grid-column: span 4;
+			}
+		}
+
+		&__button {
+			width: auto !important;
+
+			@media screen and (min-width: $BREAKPOINT_SM) {
+				grid-column: span 2;
+			}
+		}
+
+		&__icon {
+			margin-bottom: 2px;
+		}
+	}
+}

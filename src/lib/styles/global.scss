@@ -1,0 +1,22 @@
+@use './reset';
+@use './fonts';
+@use './index' as *;
+
+body {
+	height: 100dvh;
+
+	font-family: 'Nunito', sans-serif;
+	color: $COLOR_WHITE_1;
+
+	background-color: $COLOR_BLACK_1;
+}
+
+a {
+	color: $COLOR_BLUE_1;
+
+	transition: opacity 0.3s ease;
+
+	&:hover {
+		opacity: 0.9;
+	}
+}

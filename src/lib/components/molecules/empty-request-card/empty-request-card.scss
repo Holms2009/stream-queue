@@ -1,0 +1,43 @@
+@use '/src/lib/styles/index' as *;
+
+.empty-request-card {
+	padding: 8px 12px;
+	height: 180px;
+	display: flex;
+	flex-direction: column;
+	flex-shrink: 0;
+
+	border: 1px solid $COLOR_GRAY_1;
+	border-radius: $RADIUS_MEDIUM;
+
+	@media screen and (min-width: $BREAKPOINT_SM) {
+		padding: 12px 16px;
+		height: 160px;
+	}
+
+	&__header {
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	&__title {
+		@include heading-4;
+
+		margin-top: 48px;
+
+		color: $COLOR_GRAY_1;
+		text-align: center;
+
+		@media screen and (min-width: $BREAKPOINT_SM) {
+			margin-top: 32px;
+		}
+	}
+}
+
+:global {
+	.empty-request-card {
+		&__icon {
+			color: $COLOR_GRAY_1;
+		}
+	}
+}

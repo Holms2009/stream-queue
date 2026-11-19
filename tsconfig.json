@@ -1,0 +1,31 @@
+{
+	"extends": "$app/tsconfig",
+	"compilerOptions": {
+		"strict": true,
+		"jsx": "react-jsx",
+		"paths": {
+			"@atoms": ["./src/lib/components/atoms"],
+			"@atoms/*": ["./src/lib/components/atoms/*"],
+			"@molecules": ["./src/lib/components/molecules"],
+			"@molecules/*": ["./src/lib/components/molecules/*"],
+			"@organisms": ["./src/lib/components/organisms"],
+			"@organisms/*": ["./src/lib/components/organisms/*"],
+			"@assets": ["./src/lib/assets"],
+			"@assets/*": ["./src/lib/assets/*"],
+			"@server": ["./src/lib/server"],
+			"@server/*": ["./src/lib/server/*"],
+			"@db": ["./src/lib/server/db"],
+			"@db/*": ["./src/lib/server/db/*"]
+		},
+		"types": ["$app/types", "node"]
+	},
+	"include": [
+		"src",
+		"src/**/*.svelte",
+		"src/**/*.scss",
+		"vite.config.ts",
+		"prettier.config.js",
+		"eslint.config.js",
+		"drizzle.config.ts"
+	]
+}

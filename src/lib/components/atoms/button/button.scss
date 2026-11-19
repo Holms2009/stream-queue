@@ -1,0 +1,72 @@
+@use '/src/lib/styles/index' as *;
+
+.button {
+	@include text-16;
+
+	padding: 8px 32px;
+	width: fit-content;
+	height: fit-content;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	gap: 4px;
+
+	color: $COLOR_WHITE_1;
+
+	background-color: $COLOR_BLUE_1;
+	border: none;
+	border-radius: 100px;
+
+	transition: all 0.3s ease;
+	cursor: pointer;
+
+	&:hover {
+		background-color: $COLOR_BLUE_1_HOVER;
+	}
+
+	&:active {
+		background-color: $COLOR_BLUE_1_ACTIVE;
+	}
+
+	&_with-border {
+		padding: 7px 31px;
+		border: 1px solid $COLOR_WHITE_1;
+	}
+
+	&_purple {
+		background-color: $COLOR_PURPLE_1;
+
+		&:hover {
+			background-color: $COLOR_PURPLE_1_HOVER;
+		}
+
+		&:active {
+			background-color: $COLOR_PURPLE_1_ACTIVE;
+		}
+	}
+
+	&_white {
+		color: $COLOR_BLUE_1;
+		background-color: $COLOR_WHITE_1;
+
+		&.button_with-border {
+			border-color: $COLOR_BLUE_1;
+		}
+
+		&:hover {
+			background-color: $COLOR_WHITE_2;
+		}
+
+		&:active {
+			background-color: $COLOR_WHITE_3;
+		}
+	}
+
+	&:disabled {
+		color: $COLOR_GRAY_1;
+
+		background-color: $COLOR_GRAY_2;
+
+		cursor: default;
+	}
+}
