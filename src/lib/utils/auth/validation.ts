@@ -1,14 +1,16 @@
 import { z } from 'zod';
 
+const emailSchema = z
+	.string({ error: 'Введите почту' })
+	.trim()
+	.min(1, 'Введите почту')
+	.toLowerCase()
+	.max(255, 'Почта должна содержать не более 255 символов')
+	.pipe(z.email({ error: 'Введите корректный адрес почты' }));
+
 export const registrationSchema = z
 	.object({
-		email: z
-			.string({ error: 'Введите почту' })
-			.trim()
-			.min(1, 'Введите почту')
-			.toLowerCase()
-			.max(255, 'Почта должна содержать не более 255 символов')
-			.pipe(z.email({ error: 'Введите корректный адрес почты' })),
+		email: emailSchema,
 		password: z
 			.string({ error: 'Введите пароль' })
 			.min(1, 'Введите пароль')
@@ -22,3 +24,13 @@ export const registrationSchema = z
 	});
 
 export type RegistrationData = z.output<typeof registrationSchema>;
+
+export const loginSchema = z.object({
+	email: emailSchema,
+	password: z
+		.string({ error: 'Введите пароль' })
+		.min(1, 'Введите пароль')
+		.max(255, 'Пароль должен содержать не более 255 символов')
+});
+
+export type LoginData = z.output<typeof loginSchema>;

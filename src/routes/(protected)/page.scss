@@ -9,6 +9,17 @@
 	flex-direction: column;
 	flex-grow: 1;
 
+	&__logout {
+		position: fixed;
+		top: 1rem;
+		right: 1rem;
+		z-index: 1;
+	}
+
+	&__logout-error {
+		color: $COLOR_RED_1;
+	}
+
 	&__list-header {
 		margin-top: 16px;
 		display: flex;
