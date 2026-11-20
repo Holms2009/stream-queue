@@ -15,7 +15,7 @@ describe('данные корневого layout', () => {
 		const event = { locals: { user } } as unknown as Parameters<typeof load>[0];
 
 		expect(await load(event)).toEqual({
-			user: { id: user.id, displayName: user.displayName, avatar: user.avatar }
+			user: { id: user.id, email: user.email, displayName: user.displayName, avatar: user.avatar }
 		});
 	});
 

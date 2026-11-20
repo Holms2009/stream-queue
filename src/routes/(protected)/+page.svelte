@@ -1,12 +1,9 @@
 <script lang="ts">
-	import { enhance } from '$app/forms';
-
-	import { Button } from '@atoms';
 	import { ActiveRequestCard, EmptyRequestCard, RequestsListItem } from '@molecules';
-	import { RequestAddForm } from '@organisms';
-	import type { ActionData } from './$types';
+	import { RequestAddForm, UserMenu } from '@organisms';
+	import type { PageProps } from './$types';
 
-	let { form }: { form: ActionData } = $props();
+	let { data, form }: PageProps = $props();
 
 	let activeRequest = $state({ title: 'Клип — Spiritbox', author: 'Banifator' });
 
@@ -29,12 +26,7 @@
 </script>
 
 <div class="main">
-	<form class="main__logout" method="POST" action="?/logout" use:enhance>
-		<Button type="submit">Выйти</Button>
-		{#if form?.error}
-			<p class="main__logout-error">{form.error}</p>
-		{/if}
-	</form>
+	<UserMenu class="main__user-menu" user={data.user} error={form?.error} />
 	{#if activeRequest}
 		<ActiveRequestCard class="main__active-request" data={activeRequest} />
 	{:else}

@@ -1,24 +1,13 @@
 @use '/src/lib/styles/index' as *;
 
 .main {
-	overflow: hidden;
+	position: relative;
 
 	padding: 20px 0;
 	max-height: 100%;
 	display: flex;
 	flex-direction: column;
 	flex-grow: 1;
-
-	&__logout {
-		position: fixed;
-		top: 1rem;
-		right: 1rem;
-		z-index: 1;
-	}
-
-	&__logout-error {
-		color: $COLOR_RED_1;
-	}
 
 	&__list-header {
 		margin-top: 16px;
@@ -51,6 +40,12 @@
 
 :global {
 	.main {
+		&__user-menu {
+			position: absolute;
+			top: 20px;
+			right: -46px;
+		}
+
 		&__request-add-form {
 			margin-top: auto;
 		}
