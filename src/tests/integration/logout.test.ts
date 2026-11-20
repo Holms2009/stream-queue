@@ -59,7 +59,8 @@ describe('выход через кнопку', () => {
 		await page.getByRole('button', { name: 'Войти' }).click();
 		await page.waitForURL(`${origin}/`);
 
-		await page.getByRole('button', { name: 'Выйти' }).click();
+		await page.getByRole('button', { name: 'Меню пользователя' }).click();
+		await page.getByRole('menuitem', { name: 'Выйти' }).click();
 		await page.waitForURL(`${origin}/login`);
 
 		await page.goto(`${origin}/`);
