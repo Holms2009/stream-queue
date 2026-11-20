@@ -13,7 +13,7 @@
 	<div class="register-success__container">
 		<h1 class="register-success__title">Аккаунт создан</h1>
 		<p class="register-success__message">Проверьте почту для подтверждения аккаунта.</p>
-		<Button class="register-success__button" onclick={() => goto(resolve('/'))}>На главную</Button>
+		<Button class="register-success__button" onclick={() => goto(resolve('/(protected)'))}>На главную</Button>
 	</div>
 
 	<div class="register-success__light"></div>

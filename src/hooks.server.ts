@@ -8,7 +8,13 @@ import {
 } from '@server/auth/session';
 import { getUserDataByUserId } from '@db/actions/user';
 
-const PUBLIC_ROUTES = new Set(['/login', '/register', '/register/success', '/confirm-email']);
+const PUBLIC_ROUTES = new Set([
+	'/login',
+	'/register',
+	'/register/success',
+	'/confirm-email',
+	'/forgot-password'
+]);
 
 export const handle: Handle = async ({ event, resolve }) => {
 	event.locals.session = null;

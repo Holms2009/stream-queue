@@ -36,7 +36,7 @@
 					<p class="confirm-email__message">Произошла ошибка. Попробуйте позже.</p>
 				{/if}
 			{/if}
-			<Button class="confirm-email__button" onclick={() => goto(resolve('/'))}>На главную</Button>
+			<Button class="confirm-email__button" onclick={() => goto(resolve('/(protected)'))}>На главную</Button>
 		{/if}
 	</div>
 
