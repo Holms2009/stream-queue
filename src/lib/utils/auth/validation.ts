@@ -8,6 +8,8 @@ const emailSchema = z
 	.max(255, 'Почта должна содержать не более 255 символов')
 	.pipe(z.email({ error: 'Введите корректный адрес почты' }));
 
+export const passwordResetRequestSchema = z.object({ email: emailSchema });
+
 export const registrationSchema = z
 	.object({
 		email: emailSchema,

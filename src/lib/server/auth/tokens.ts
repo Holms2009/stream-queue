@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-import { getPasswordResetToken } from '@db/actions/passwordReset';
+import { getPasswordResetToken, replacePasswordResetToken } from '@db/actions/passwordReset';
 import { getEmailVerifyToken, replaceEmailVerifyToken } from '@db/actions/emailVerify';
 
 export function generateToken() {
@@ -18,6 +18,15 @@ export async function createEmailVerificationToken(userId: number) {
 	const record = await replaceEmailVerifyToken(userId, tokenHash);
 
 	return record ? token : null;
+}
+
+export async function createPasswordResetToken(userId: number) {
+	const token = generateToken();
+	const tokenHash = hashToken(token);
+
+	await replacePasswordResetToken(userId, tokenHash);
+
+	return token;
 }
 
 type TVerifyResult =
