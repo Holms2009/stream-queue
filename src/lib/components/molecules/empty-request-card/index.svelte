@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Volleyball } from '@lucide/svelte';
+	import { Play, Volleyball } from '@lucide/svelte';
 
 	type Props = {
 		class?: string;
@@ -13,6 +13,7 @@
 		<Volleyball class="empty-request-card__icon" size={20} />
 	</div>
 	<h4 class="empty-request-card__title">Нет активного заказа</h4>
+	<button class="empty-request-card__button" title="Взять заказ"><Play size="100%" /></button>
 </div>
 
 <style lang="scss">

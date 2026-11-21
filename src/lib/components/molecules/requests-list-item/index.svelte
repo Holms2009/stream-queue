@@ -25,7 +25,12 @@
 				<ChevronDown size="100%" />
 			</button>
 		</div>
-		<button class="requests-list-item__to-end" onclick={() => onMove('to-end')}>В конец</button>
+		<button
+			class="requests-list-item__to-end"
+			onclick={() => onMove(data.status === 'deferred' ? 'return-to-queue' : 'to-end')}
+		>
+			{data.status === 'deferred' ? 'Вернуть в очередь' : 'В конец'}
+		</button>
 	</div>
 </div>
 
