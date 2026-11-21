@@ -5,20 +5,9 @@
 
 	let { data, form }: PageProps = $props();
 
-	let activeRequest = $state({ title: 'Клип — Spiritbox', author: 'Banifator' });
-
-	const requestsMock = [
-		{ title: 'Клип — Spiritbox', author: 'Banifator' },
-		{ title: 'Клип — Bring Me The Horizon', author: 'Moonlight' },
-		{ title: 'Игра — Hollow Knight', author: 'Shade' },
-		{ title: 'Клип — Linkin Park', author: 'Neko' },
-		{ title: 'Игра — Hades', author: 'Phoenix' },
-		{ title: 'Клип — Architects', author: 'Storm' },
-		{ title: 'Игра — Celeste', author: 'Cloud' },
-		{ title: 'Клип — Sleep Token', author: 'Raven' },
-		{ title: 'Игра — Stardew Valley', author: 'Luna' },
-		{ title: 'Клип — Muse', author: 'Atlas' }
-	];
+	let activeRequest = $derived(data.requests.find((request) => request.status === 'active'));
+	let waitingRequests = $derived(data.requests.filter((request) => request.status === 'waiting'));
+	let deferredRequests = $derived(data.requests.filter((request) => request.status === 'deferred'));
 
 	function handleRequestMove(itemId: unknown, moveType: unknown) {
 		console.log('Move request', itemId, moveType);
@@ -27,20 +16,41 @@
 
 <div class="main">
 	<UserMenu class="main__user-menu" user={data.user} error={form?.error} />
+
 	{#if activeRequest}
-		<ActiveRequestCard class="main__active-request" data={activeRequest} />
+		<ActiveRequestCard
+			class="main__active-request"
+			data={{ title: activeRequest.title, author: activeRequest.viewerName }}
+		/>
 	{:else}
 		<EmptyRequestCard />
 	{/if}
+
 	<div class="main__list-header">
 		<span class="main__list-header-label">Очередь</span>
-		<span class="main__list-header-label">{requestsMock.length} ожидают</span>
+		<span class="main__list-header-label">{waitingRequests.length} ожидают</span>
 	</div>
+
+	<div class="main__border"></div>
 	<div class="main__requests-list">
-		{#each requestsMock as request, index (index)}
-			<RequestsListItem data={request} index={index + 1} onMove={handleRequestMove} />
+		{#each waitingRequests as request, index (request.id)}
+			<RequestsListItem
+				data={{ ...request, author: request.viewerName }}
+				index={index + 1}
+				onMove={(moveType: string) => handleRequestMove(request.id, moveType)}
+			/>
 		{/each}
+		{#if deferredRequests.length}
+			{#each deferredRequests as request, index (request.id)}
+				<RequestsListItem
+					data={{ ...request, author: request.viewerName }}
+					index={index + 1}
+					onMove={(moveType: string) => handleRequestMove(request.id, moveType)}
+				/>
+			{/each}
+		{/if}
 	</div>
+	<div class="main__border main__border_bottom"></div>
 	<RequestAddForm class="main__request-add-form" />
 </div>
 
