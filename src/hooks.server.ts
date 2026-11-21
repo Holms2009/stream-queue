@@ -13,7 +13,8 @@ const PUBLIC_ROUTES = new Set([
 	'/register',
 	'/register/success',
 	'/confirm-email',
-	'/forgot-password'
+	'/forgot-password',
+	'/reset-password'
 ]);
 
 export const handle: Handle = async ({ event, resolve }) => {
