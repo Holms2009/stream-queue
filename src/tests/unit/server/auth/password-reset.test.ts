@@ -1,13 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import { resetPasswordByTokenHash } from '@db/actions/passwordReset';
 import { getUserByEmail } from '@db/actions/user';
-import { requestPasswordReset } from '@server/auth/password-reset';
-import { createPasswordResetToken } from '@server/auth/tokens';
+import { requestPasswordReset, resetPassword } from '@server/auth/password-reset';
+import { hashPassword } from '@server/auth/password';
+import { createPasswordResetToken, hashToken } from '@server/auth/tokens';
 import { sendResetPasswordLink } from '@server/email/actions/auth';
 import { PASSWORD_RESET } from '../../../mock/password-reset';
 
+vi.mock('@db/actions/passwordReset', () => ({ resetPasswordByTokenHash: vi.fn() }));
+vi.mock('@server/auth/password', () => ({ hashPassword: vi.fn() }));
 vi.mock('@db/actions/user', () => ({ getUserByEmail: vi.fn() }));
-vi.mock('@server/auth/tokens', () => ({ createPasswordResetToken: vi.fn() }));
+vi.mock('@server/auth/tokens', () => ({ createPasswordResetToken: vi.fn(), hashToken: vi.fn() }));
 vi.mock('@server/email/actions/auth', () => ({ sendResetPasswordLink: vi.fn() }));
 
 describe('requestPasswordReset', () => {
@@ -103,5 +107,66 @@ describe('requestPasswordReset', () => {
 			requestPasswordReset({ email: PASSWORD_RESET.email }, PASSWORD_RESET.origin)
 		).rejects.toThrow(PASSWORD_RESET.errorMessage);
 		expect(sendResetPasswordLink).not.toHaveBeenCalled();
+	});
+});
+
+describe('resetPassword', () => {
+	beforeEach(() => {
+		vi.resetAllMocks();
+		vi.mocked(hashToken).mockReturnValue(PASSWORD_RESET.tokenHash);
+		vi.mocked(hashPassword).mockResolvedValue(PASSWORD_RESET.newPasswordHash);
+	});
+
+	it('хеширует пароль и токен и обновляет пароль', async () => {
+		vi.mocked(resetPasswordByTokenHash).mockResolvedValue(true);
+
+		const result = await resetPassword(PASSWORD_RESET.token, {
+			password: PASSWORD_RESET.newPassword,
+			confirmPassword: PASSWORD_RESET.newPassword
+		});
+
+		expect(result).toEqual({ success: true });
+		expect(hashPassword).toHaveBeenCalledExactlyOnceWith(PASSWORD_RESET.newPassword);
+		expect(hashToken).toHaveBeenCalledExactlyOnceWith(PASSWORD_RESET.token);
+		expect(resetPasswordByTokenHash).toHaveBeenCalledExactlyOnceWith(
+			PASSWORD_RESET.tokenHash,
+			PASSWORD_RESET.newPasswordHash
+		);
+	});
+
+	it.each([
+		{
+			password: PASSWORD_RESET.shortPassword,
+			confirmPassword: PASSWORD_RESET.shortPassword,
+			field: 'password'
+		},
+		{
+			password: PASSWORD_RESET.newPassword,
+			confirmPassword: PASSWORD_RESET.differentPassword,
+			field: 'confirmPassword'
+		}
+	])(
+		'возвращает ошибку поля $field и не меняет пароль',
+		async ({ password, confirmPassword, field }) => {
+			const result = await resetPassword(PASSWORD_RESET.token, { password, confirmPassword });
+
+			expect(result.success).toBe(false);
+			if (result.success || result.reason !== 'invalid')
+				throw new Error('Ожидалась ошибка валидации');
+			expect(result.errors.fieldErrors[field]).toBeDefined();
+			expect(hashPassword).not.toHaveBeenCalled();
+			expect(resetPasswordByTokenHash).not.toHaveBeenCalled();
+		}
+	);
+
+	it('возвращает ошибку недействительного токена', async () => {
+		vi.mocked(resetPasswordByTokenHash).mockResolvedValue(false);
+
+		const result = await resetPassword(PASSWORD_RESET.token, {
+			password: PASSWORD_RESET.newPassword,
+			confirmPassword: PASSWORD_RESET.newPassword
+		});
+
+		expect(result).toEqual({ success: false, reason: 'invalid-token' });
 	});
 });

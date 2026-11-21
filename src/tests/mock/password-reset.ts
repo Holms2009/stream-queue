@@ -2,6 +2,17 @@ export const PASSWORD_RESET = {
 	userId: 1,
 	missingUserId: -1,
 	passwordHash: 'test-password-hash',
+	newPasswordHash: 'new-test-password-hash',
+	newPassword: 'new-password-123',
+	shortPassword: 'short',
+	differentPassword: 'different-password-123',
+	tokenHash: 'test-token-hash',
+	resetPageUrl: 'http://localhost/reset-password?token=reset-token',
+	resetResponses: {
+		success: { type: 'success', status: 200, data: '[{"status":1},"success"]' },
+		invalidToken: { type: 'failure', status: 400, data: '[{"status":1},"invalid-token"]' },
+		error: { type: 'failure', status: 500, data: '[{"status":1},"error"]' }
+	},
 	testEmailPrefix: 'vitest-reset',
 	successMessage: 'Если аккаунт с такой почтой существует, мы отправили письмо для сброса пароля.',
 	oneHourMs: 60 * 60 * 1000,
