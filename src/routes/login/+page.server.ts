@@ -4,7 +4,11 @@ import { fail, redirect } from '@sveltejs/kit';
 import { loginUser } from '@server/auth/login';
 import { createSession, generateSessionToken, setSessionTokenCookie } from '@server/auth/session';
 import type { AppErrors } from '../../lib/utils/errors';
-import type { Actions } from './$types';
+import type { Actions, PageServerLoad } from './$types';
+
+export const load: PageServerLoad = ({ locals }) => {
+	if (locals.session) redirect(303, resolve('/(protected)'));
+};
 
 export const actions = {
 	default: async ({ request, cookies }) => {

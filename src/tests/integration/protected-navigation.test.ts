@@ -10,6 +10,7 @@ import { addUserWithData } from '@db/actions/user';
 import { usersTable } from '@db/schema';
 import { hashPassword } from '@server/auth/password';
 import { LOGIN } from '../mock/login';
+import { SESSION } from '../mock/session';
 
 describe('переход на защищённую главную страницу', () => {
 	let server: ViteDevServer;
@@ -71,4 +72,39 @@ describe('переход на защищённую главную страниц
 		await page.waitForURL(`${origin}/`);
 		expect(page.url()).toBe(`${origin}/`);
 	});
+
+	it('перенаправляет пользователя с сессией при клиентских переходах на вход и регистрацию', async () => {
+		await page.goto(`${origin}/login`, { waitUntil: 'networkidle' });
+		await page.getByPlaceholder('Email').fill(email);
+		await page.getByPlaceholder('Пароль').fill(LOGIN.data.password);
+		await page.getByRole('button', { name: 'Войти' }).click();
+		await page.waitForURL(`${origin}/`);
+
+		for (const route of SESSION.guestRoutes) {
+			await page.evaluate((href) => {
+				const link = document.createElement('a');
+				link.href = href;
+				link.textContent = 'Перейти к форме';
+				document.body.append(link);
+			}, route);
+			const [response] = await Promise.all([
+				page.waitForResponse((response) => response.url().includes(`${route}/__data.json`)),
+				page.getByRole('link', { name: 'Перейти к форме' }).click()
+			]);
+			await response.finished();
+			await page.getByText('Очередь', { exact: true }).waitFor();
+			expect(page.url()).toBe(`${origin}/`);
+			await page.getByRole('link', { name: 'Перейти к форме' }).evaluate((link) => link.remove());
+		}
+	}, 30000);
+
+	it('позволяет гостю переходить между формами входа и регистрации', async () => {
+		await page.goto(`${origin}/login`, { waitUntil: 'networkidle' });
+		await page.getByRole('link', { name: 'Создать аккаунт' }).click();
+		await page.getByRole('button', { name: 'Зарегистрировать' }).waitFor();
+		expect(page.url()).toBe(`${origin}/register`);
+		await page.getByRole('link', { name: 'Уже зарегистрированы?' }).click();
+		await page.getByRole('button', { name: 'Войти' }).waitFor();
+		expect(page.url()).toBe(`${origin}/login`);
+	}, 30000);
 });
