@@ -3,6 +3,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@db';
 import { usersTable, usersDataTable } from '@db/schema';
 import type { TDatabaseTransaction, TUser, TUserData } from '@db/types';
+import { addQueue } from './queue';
 
 export async function getUserByID(userId: number) {
 	const row = await db.select().from(usersTable).where(eq(usersTable.id, userId));
@@ -91,6 +92,9 @@ export async function addUserWithData(email: string, passwordHash: string) {
 		const userData = await addUserData(user.id, transaction);
 
 		if (!userData) throw new Error('Unexpected error while adding user data');
+
+		const queue = await addQueue(user.id, transaction);
+		if (!queue) throw new Error('Unexpected error while adding initial queue');
 
 		return user.id;
 	});
