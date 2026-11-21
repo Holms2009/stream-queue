@@ -15,6 +15,8 @@ export const SESSION = {
 		createdAt: new Date('2025-01-01T00:00:00.000Z')
 	},
 	publicRoutes: ['/login', '/register', '/register/success', '/confirm-email'],
+	guestRoutes: ['/login', '/register'],
+	otherPublicRoutes: ['/forgot-password', '/reset-password', '/confirm-email'],
 	protectedRoute: '/',
 	databaseError: 'database error'
 };

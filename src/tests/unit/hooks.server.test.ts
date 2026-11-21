@@ -16,7 +16,7 @@ vi.mock('@server/auth/session', () => ({
 	validateSessionToken: vi.fn()
 }));
 
-function createRequest(token?: string, route = SESSION.publicRoutes[1]) {
+function createRequest(token?: string, route = SESSION.publicRoutes[2]) {
 	const event = {
 		locals: {},
 		route: { id: route },
@@ -140,4 +140,37 @@ describe('серверный hook сессии', () => {
 
 		expect(resolve).toHaveBeenCalledExactlyOnceWith(event);
 	});
+
+	it.each(SESSION.guestRoutes)(
+		'перенаправляет авторизованного пользователя с %s на главную',
+		async (route) => {
+			vi.mocked(validateSessionToken).mockResolvedValue({
+				id: SESSION.id,
+				userId: SESSION.user.userId,
+				expiresAt: SESSION.renewedExpiry
+			});
+			vi.mocked(getUserDataByUserId).mockResolvedValue(SESSION.user);
+			const { resolve, args } = createRequest(SESSION.token, route);
+
+			await expect(handle(args)).rejects.toMatchObject({ status: 303, location: '/' });
+			expect(resolve).not.toHaveBeenCalled();
+		}
+	);
+
+	it.each(SESSION.otherPublicRoutes)(
+		'разрешает авторизованному пользователю доступ к %s',
+		async (route) => {
+			vi.mocked(validateSessionToken).mockResolvedValue({
+				id: SESSION.id,
+				userId: SESSION.user.userId,
+				expiresAt: SESSION.renewedExpiry
+			});
+			vi.mocked(getUserDataByUserId).mockResolvedValue(SESSION.user);
+			const { event, resolve, args } = createRequest(SESSION.token, route);
+
+			await handle(args);
+
+			expect(resolve).toHaveBeenCalledExactlyOnceWith(event);
+		}
+	);
 });

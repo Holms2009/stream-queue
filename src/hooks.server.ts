@@ -1,3 +1,4 @@
+import { resolve as resolvePath } from '$app/paths';
 import { redirect } from '@sveltejs/kit';
 import type { Handle } from '@sveltejs/kit/hooks';
 
@@ -8,6 +9,7 @@ import {
 } from '@server/auth/session';
 import { getUserDataByUserId } from '@db/actions/user';
 
+const GUEST_ROUTES = new Set(['/login', '/register']);
 const PUBLIC_ROUTES = new Set([
 	'/login',
 	'/register',
@@ -46,6 +48,10 @@ export const handle: Handle = async ({ event, resolve }) => {
 				setSessionTokenCookie(event.cookies, token, session.expiresAt);
 			}
 		}
+	}
+
+	if (event.route.id && GUEST_ROUTES.has(event.route.id) && event.locals.session) {
+		redirect(303, resolvePath('/(protected)'));
 	}
 
 	if (event.route.id && !PUBLIC_ROUTES.has(event.route.id) && !event.locals.session) {
