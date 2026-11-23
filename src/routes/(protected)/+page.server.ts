@@ -4,6 +4,8 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { getLatestQueueWithRequests } from '@db/actions/queue';
 import { deleteSession } from '@db/actions/session';
 import { deleteSessionTokenCookie } from '@server/auth/session';
+import { createRequest } from '@server/request';
+import type { AppErrors } from '../../lib/utils/errors';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -17,6 +19,43 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions = {
+	addRequest: async ({ locals, request }) => {
+		if (!locals.session) redirect(303, resolve('/login'));
+
+		const formData = await request.formData();
+		const queueId = formData.get('queueId');
+
+		try {
+			const result = await createRequest({
+				userId: locals.session.userId,
+				queueId: typeof queueId === 'string' ? Number(queueId) : NaN,
+				input: { title: formData.get('title'), viewerName: formData.get('viewerName') }
+			});
+
+			if (!result.success) {
+				if (result.reason === 'invalid')
+					return fail(400, { status: 'invalid' as const, errors: result.errors });
+				return fail(404, {
+					status: 'error' as const,
+					errors: {
+						formErrors: ['Очередь не найдена. Обновите страницу.'],
+						fieldErrors: {}
+					} satisfies AppErrors
+				});
+			}
+
+			return { status: 'success' as const };
+		} catch (error) {
+			console.error('Ошибка добавления заказа:', error);
+			return fail(500, {
+				status: 'error' as const,
+				errors: {
+					formErrors: ['Не удалось добавить заказ. Попробуйте позже.'],
+					fieldErrors: {}
+				} satisfies AppErrors
+			});
+		}
+	},
 	logout: async (event) => {
 		const { session } = event.locals;
 

@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { ChevronDown, ChevronUp } from '@lucide/svelte';
+	import { fly } from 'svelte/transition';
 
 	const { class: className = '', index, data, onMove } = $props();
 </script>
 
-<div class={['requests-list-item', className]}>
+<div class={['requests-list-item', className]} transition:fly={{ y: 5, opacity: 1 }}>
 	<span class="requests-list-item__index">{index}</span>
 	<div class="requests-list-item__text-wrapper">
 		<h5 class="requests-list-item__title">{data.title}</h5>
