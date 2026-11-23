@@ -1,6 +1,25 @@
 export const QUEUE = {
 	title: 'Тестовый заказ',
 	viewerName: 'Зритель',
+	queueId: 1,
+	userId: 15,
+	requestInput: { title: '  Тестовый заказ  ', viewerName: '  Зритель  ' },
+	tooLongTitle: 'а'.repeat(256),
+	tooLongViewerName: 'а'.repeat(101),
+	formError: 'Не удалось добавить заказ. Попробуйте позже.',
+	invalidErrors: { formErrors: [], fieldErrors: { title: ['Введите название заказа'] } },
+	failureResponse: {
+		type: 'failure',
+		status: 500,
+		data: JSON.stringify([
+			{ status: 1, errors: 2 },
+			'error',
+			{ formErrors: 3, fieldErrors: 5 },
+			[4],
+			'Не удалось добавить заказ. Попробуйте позже.',
+			{}
+		])
+	},
 	description: 'Описание заказа',
 	missingId: -1,
 	invalidStatus: 'unknown',

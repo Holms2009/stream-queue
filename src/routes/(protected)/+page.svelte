@@ -15,7 +15,11 @@
 </script>
 
 <div class="main">
-	<UserMenu class="main__user-menu" user={data.user} error={form?.error} />
+	<UserMenu
+		class="main__user-menu"
+		user={data.user}
+		error={form && 'error' in form ? form.error : undefined}
+	/>
 
 	{#if activeRequest}
 		<ActiveRequestCard
@@ -51,7 +55,7 @@
 		{/if}
 	</div>
 	<div class="main__border main__border_bottom"></div>
-	<RequestAddForm class="main__request-add-form" />
+	<RequestAddForm class="main__request-add-form" queueId={data.queue.id} />
 </div>
 
 <style lang="scss">
