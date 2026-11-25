@@ -40,6 +40,9 @@ export default defineConfig({
 				extends: './vite.config.ts',
 				test: {
 					name: 'server',
+					globalSetup: ['src/tests/integration/setup.ts'],
+					testTimeout: 30000,
+					hookTimeout: 60000,
 					environment: 'node',
 					include: ['src/**/*.{test,spec}.{js,ts}'],
 					exclude: ['src/**/*.svelte.{test,spec}.{js,ts}']

@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
-import { resetPasswordByTokenHash } from '@db/actions/passwordReset';
-import { getUserByEmail } from '@db/actions/user';
+import { withTransaction } from '@db';
+import { consumePasswordResetToken, getPasswordResetToken } from '@db/actions/passwordReset';
+import { deleteUserSessions } from '@db/actions/session';
+import { getUserByEmail, getUserByID, updateUser } from '@db/actions/user';
 import { sendResetPasswordLink } from '@server/email/actions/auth';
 import { passwordResetRequestSchema, resetPasswordSchema } from '../../utils/auth/validation';
 import type { AppErrors } from '../../utils/errors';
@@ -47,4 +49,18 @@ export async function resetPassword(token: string, input: unknown) {
 	if (!updated) return { success: false as const, reason: 'invalid-token' as const };
 
 	return { success: true as const };
+}
+
+export async function resetPasswordByTokenHash(tokenHash: string, passwordHash: string) {
+	return await withTransaction(async (transaction) => {
+		const token = await getPasswordResetToken(tokenHash, transaction);
+		if (!token) return false;
+		const user = await getUserByID(token.userId, transaction, true);
+		if (!user) return false;
+		const consumedToken = await consumePasswordResetToken(user.id, tokenHash, transaction);
+		if (!consumedToken) return false;
+		await updateUser(user.id, { passwordHash }, transaction);
+		await deleteUserSessions(user.id, transaction);
+		return true;
+	});
 }

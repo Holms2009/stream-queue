@@ -1,7 +1,30 @@
 import crypto from 'crypto';
 
-import { getPasswordResetToken, replacePasswordResetToken } from '@db/actions/passwordReset';
-import { getEmailVerifyToken, replaceEmailVerifyToken } from '@db/actions/emailVerify';
+import { withTransaction } from '@db';
+import { addPasswordResetToken, deletePasswordResetTokens, getPasswordResetToken } from '@db/actions/passwordReset';
+import { addEmailVerifyToken, deleteEmailVerifyTokens, getEmailVerifyToken } from '@db/actions/emailVerify';
+import { getUserByID } from '@db/actions/user';
+
+export async function replaceEmailVerifyToken(userId: number, tokenHash: string) {
+	return await withTransaction(async (transaction) => {
+		const user = await getUserByID(userId, transaction, true);
+		if (!user) throw new Error('User not found while creating email verification token');
+		if (user.emailVerified) return null;
+		await deleteEmailVerifyTokens(userId, transaction);
+		const token = await addEmailVerifyToken(userId, tokenHash, new Date(Date.now() + 36e5), transaction);
+		if (!token) throw new Error('Failed to create email verification token');
+		return token;
+	});
+}
+
+export async function replacePasswordResetToken(userId: number, tokenHash: string) {
+	await withTransaction(async (transaction) => {
+		const user = await getUserByID(userId, transaction, true);
+		if (!user) throw new Error('User not found while creating password reset token');
+		await deletePasswordResetTokens(userId, transaction);
+		await addPasswordResetToken(userId, tokenHash, new Date(Date.now() + 36e5), transaction);
+	});
+}
 
 export function generateToken() {
 	return crypto.randomBytes(32).toString('hex');

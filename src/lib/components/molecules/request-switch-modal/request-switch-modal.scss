@@ -1,0 +1,17 @@
+@use '/src/lib/styles/index' as *;
+
+.request-switch-modal {
+	&__buttons {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 8px;
+	}
+}
+
+:global {
+	.request-switch-modal {
+		&__button {
+			width: 100% !important;
+		}
+	}
+}

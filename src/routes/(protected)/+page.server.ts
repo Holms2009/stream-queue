@@ -1,10 +1,12 @@
 import { resolve } from '$app/paths';
 import { error, fail, redirect } from '@sveltejs/kit';
+import { z } from 'zod';
 
 import { getLatestQueueWithRequests } from '@db/actions/queue';
 import { deleteSession } from '@db/actions/session';
 import { deleteSessionTokenCookie } from '@server/auth/session';
 import { createRequest } from '@server/request';
+import { createRequestSchema, requestIdSchema } from '../../lib/utils/request/validation';
 import type { AppErrors } from '../../lib/utils/errors';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -24,11 +26,20 @@ export const actions = {
 
 		const formData = await request.formData();
 		const queueId = formData.get('queueId');
+		const parsedQueueId = requestIdSchema.safeParse(typeof queueId === 'string' ? Number(queueId) : NaN);
+		if (!parsedQueueId.success) {
+			const fields = createRequestSchema.safeParse({ title: formData.get('title'), viewerName: formData.get('viewerName') });
+			if (!fields.success) return fail(400, { status: 'invalid' as const, errors: z.flattenError(fields.error) });
+			return fail(404, {
+				status: 'error' as const,
+				errors: { formErrors: ['Очередь не найдена. Обновите страницу.'], fieldErrors: {} } satisfies AppErrors
+			});
+		}
 
 		try {
 			const result = await createRequest({
 				userId: locals.session.userId,
-				queueId: typeof queueId === 'string' ? Number(queueId) : NaN,
+				queueId: parsedQueueId.data,
 				input: { title: formData.get('title'), viewerName: formData.get('viewerName') }
 			});
 

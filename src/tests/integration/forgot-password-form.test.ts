@@ -1,8 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { chromium, type Browser, type Page } from 'playwright';
-import { createServer, type ViteDevServer } from 'vite';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, inject } from 'vitest';
 
 import { DATABASE_URL } from '$app/env/private';
 import { db } from '@db';
@@ -10,15 +9,13 @@ import { passwordResetTokens, usersTable } from '@db/schema';
 import { PASSWORD_RESET } from '../mock/password-reset';
 
 describe('запрос сброса пароля', () => {
-	let server: ViteDevServer;
 	let browser: Browser;
 	let page: Page;
-	let origin: string;
+	const origin = inject('integrationOrigin');
 	let userId: number | undefined;
-	const sentEmails: { email: string }[] = [];
-	let mockedEmailModule = false;
-	function recordEmail(data: { email: string }) {
-		sentEmails.push(data);
+	async function getSentEmails(): Promise<{ email: string }[]> {
+		const response = await page.request.get(`${origin}/__test/emails`);
+		return await response.json();
 	}
 	const email = `${PASSWORD_RESET.testEmailPrefix}-${randomUUID()}@example.com`;
 	const unknownEmail = `${PASSWORD_RESET.testEmailPrefix}-${randomUUID()}@example.com`;
@@ -38,34 +35,11 @@ describe('запрос сброса пароля', () => {
 			.values({ email, passwordHash: PASSWORD_RESET.passwordHash })
 			.returning();
 		userId = user.id;
-		server = await createServer({
-			server: { host: '127.0.0.1', port: 0 },
-			logLevel: 'error',
-			plugins: [
-				{
-					name: 'mock-password-reset-email',
-					enforce: 'pre',
-					transform(_code, id) {
-						if (id.replaceAll('\\', '/').endsWith('/src/lib/server/email/actions/auth.ts')) {
-							mockedEmailModule = true;
-							return "export async function sendResetPasswordLink(data) { process.emit('stream-queue-test-reset-email', data); }";
-						}
-					}
-				}
-			]
-		});
-		await server.listen();
-		process.on('stream-queue-test-reset-email', recordEmail);
-		const address = server.httpServer?.address();
-		if (!address || typeof address === 'string') throw new Error('Не удалось запустить сервер');
-		origin = `http://127.0.0.1:${address.port}`;
 		browser = await chromium.launch({ headless: true });
 	}, 30000);
 
 	afterAll(async () => {
-		process.off('stream-queue-test-reset-email', recordEmail);
 		await browser?.close();
-		await server?.close();
 		if (userId !== undefined) await db.delete(usersTable).where(eq(usersTable.id, userId));
 	});
 
@@ -89,19 +63,22 @@ describe('запрос сброса пароля', () => {
 			.where(eq(passwordResetTokens.userId, userId!));
 		expect(await page.getByText(PASSWORD_RESET.successMessage).isVisible()).toBe(true);
 		expect(tokens).toHaveLength(1);
-		expect(mockedEmailModule).toBe(true);
-		expect(sentEmails).toHaveLength(1);
-		expect(sentEmails[0].email).toBe(email);
+		const sentEmails = await getSentEmails();
+		expect(sentEmails.filter((message) => message.email === email)).toHaveLength(1);
 	});
 
 	it('показывает такое же сообщение для неизвестной почты', async () => {
-		const sentCount = sentEmails.length;
+		const sentCount = (await getSentEmails()).filter(
+			(message) => message.email === unknownEmail
+		).length;
 		await page.getByPlaceholder('Email').fill(unknownEmail);
 		await page.getByRole('button', { name: 'Отправить письмо' }).click();
 		await page.getByText(PASSWORD_RESET.successMessage).waitFor();
 
 		expect(await page.getByText(PASSWORD_RESET.successMessage).isVisible()).toBe(true);
-		expect(sentEmails).toHaveLength(sentCount);
+		expect(
+			(await getSentEmails()).filter((message) => message.email === unknownEmail)
+		).toHaveLength(sentCount);
 	});
 
 	it('отклоняет некорректную почту на сервере', async () => {
@@ -123,5 +100,71 @@ describe('запрос сброса пароля', () => {
 		expect(result.type).toBe('failure');
 		expect(result.data).toContain(PASSWORD_RESET.invalidEmails[1].error);
 		expect(after).toEqual(before);
+	});
+	it('показывает ошибки почты и не отправляет некорректные данные', async () => {
+		let posts = 0;
+		page.on('request', (request) => {
+			if (request.method() === 'POST') posts++;
+		});
+		await page.getByRole('button', { name: 'Отправить письмо' }).click();
+		await page.getByText(PASSWORD_RESET.invalidEmails[0].error).waitFor();
+		await page.getByPlaceholder('Email').fill(PASSWORD_RESET.invalidEmails[1].email);
+		await page.getByText(PASSWORD_RESET.invalidEmails[0].error).waitFor({ state: 'hidden' });
+		await page.getByRole('button', { name: 'Отправить письмо' }).click();
+		await page.getByText(PASSWORD_RESET.invalidEmails[1].error).waitFor();
+		expect(posts).toBe(0);
+	});
+
+	it('показывает первую серверную ошибку поля', async () => {
+		await page.route('**/forgot-password', async (route) => {
+			if (route.request().method() !== 'POST') return route.continue();
+			await route.fulfill({
+				status: 400,
+				contentType: 'application/json',
+				body: JSON.stringify(PASSWORD_RESET.formResponses.invalid)
+			});
+		});
+		await page.getByPlaceholder('Email').fill(PASSWORD_RESET.email);
+		await page.getByRole('button', { name: 'Отправить письмо' }).click();
+		await page.getByText('Ошибка почты', { exact: true }).waitFor();
+		expect(await page.getByText('Вторая ошибка').count()).toBe(0);
+	});
+
+	it('показывает общую ошибку и оставляет форму доступной', async () => {
+		await page.route('**/forgot-password', async (route) => {
+			if (route.request().method() !== 'POST') return route.continue();
+			await route.fulfill({
+				status: 500,
+				contentType: 'application/json',
+				body: JSON.stringify(PASSWORD_RESET.formResponses.error)
+			});
+		});
+		await page.getByPlaceholder('Email').fill(PASSWORD_RESET.email);
+		await page.getByRole('button', { name: 'Отправить письмо' }).click();
+		await page.getByText('Не удалось отправить запрос. Попробуйте позже.').waitFor();
+		expect(await page.getByRole('button', { name: 'Отправить письмо' }).isVisible()).toBe(true);
+	});
+
+	it('показывает загрузку до ответа и сообщение после успеха', async () => {
+		let release!: () => void;
+		const pending = new Promise<void>((resolve) => {
+			release = resolve;
+		});
+		await page.route('**/forgot-password', async (route) => {
+			if (route.request().method() !== 'POST') return route.continue();
+			await pending;
+			await route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify(PASSWORD_RESET.formResponses.success)
+			});
+		});
+		await page.getByPlaceholder('Email').fill(PASSWORD_RESET.email);
+		await page.getByRole('button', { name: 'Отправить письмо' }).click();
+		await page.getByRole('status', { name: 'Загрузка' }).waitFor();
+		release();
+		await page.getByRole('status', { name: 'Загрузка' }).waitFor({ state: 'hidden' });
+		await page.getByText(PASSWORD_RESET.successMessage).waitFor();
+		expect(await page.getByRole('button', { name: 'Отправить письмо' }).count()).toBe(0);
 	});
 });

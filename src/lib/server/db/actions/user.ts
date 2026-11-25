@@ -3,10 +3,14 @@ import { eq } from 'drizzle-orm';
 import { db } from '@db';
 import { usersTable, usersDataTable } from '@db/schema';
 import type { TDatabaseTransaction, TUser, TUserData } from '@db/types';
-import { addQueue } from './queue';
 
-export async function getUserByID(userId: number) {
-	const row = await db.select().from(usersTable).where(eq(usersTable.id, userId));
+export async function getUserByID(
+	userId: number,
+	transaction?: TDatabaseTransaction,
+	forUpdate = false
+) {
+	const query = (transaction ?? db).select().from(usersTable).where(eq(usersTable.id, userId));
+	const row = await (forUpdate ? query.for('update') : query);
 
 	return row.length ? row[0] : null;
 }
@@ -34,15 +38,19 @@ export async function addUser(
 	return row.length ? row[0] : null;
 }
 
-export async function updateUser(userId: number, fields: Partial<TUser>): Promise<void> {
-	await db
+export async function updateUser(
+	userId: number,
+	fields: Partial<TUser>,
+	transaction?: TDatabaseTransaction
+): Promise<void> {
+	await (transaction ?? db)
 		.update(usersTable)
 		.set({ ...fields })
 		.where(eq(usersTable.id, userId));
 }
 
-export async function getUserDataByUserId(userId: number): Promise<TUserData | null> {
-	const row = await db
+async function getUserData(condition: ReturnType<typeof eq>): Promise<TUserData | null> {
+	const [row] = await db
 		.select({
 			id: usersDataTable.id,
 			userId: usersDataTable.userId,
@@ -53,28 +61,17 @@ export async function getUserDataByUserId(userId: number): Promise<TUserData | n
 			createdAt: usersDataTable.createdAt
 		})
 		.from(usersTable)
-		.where(eq(usersTable.id, userId))
+		.where(condition)
 		.innerJoin(usersDataTable, eq(usersTable.id, usersDataTable.userId));
+	return row ?? null;
+}
 
-	return row.length ? row[0] : null;
+export async function getUserDataByUserId(userId: number): Promise<TUserData | null> {
+	return getUserData(eq(usersTable.id, userId));
 }
 
 export async function getUserDataByEmail(email: string): Promise<TUserData | null> {
-	const row = await db
-		.select({
-			id: usersDataTable.id,
-			userId: usersDataTable.userId,
-			email: usersTable.email,
-			emailVerified: usersTable.emailVerified,
-			displayName: usersDataTable.displayName,
-			avatar: usersDataTable.avatar,
-			createdAt: usersDataTable.createdAt
-		})
-		.from(usersTable)
-		.where(eq(usersTable.email, email))
-		.innerJoin(usersDataTable, eq(usersTable.id, usersDataTable.userId));
-
-	return row.length ? row[0] : null;
+	return getUserData(eq(usersTable.email, email));
 }
 
 export async function addUserData(userId: number, transaction?: TDatabaseTransaction) {
@@ -83,21 +80,15 @@ export async function addUserData(userId: number, transaction?: TDatabaseTransac
 	return row.length ? row[0] : null;
 }
 
-export async function addUserWithData(email: string, passwordHash: string) {
-	return await db.transaction(async (transaction) => {
-		const user = await addUser(email, passwordHash, transaction);
-
-		if (!user) return null;
-
-		const userData = await addUserData(user.id, transaction);
-
-		if (!userData) throw new Error('Unexpected error while adding user data');
-
-		const queue = await addQueue(user.id, transaction);
-		if (!queue) throw new Error('Unexpected error while adding initial queue');
-
-		return user.id;
-	});
+export async function updateProfile(
+	userId: number,
+	fields: Partial<TUserData>,
+	transaction?: TDatabaseTransaction
+) {
+	await (transaction ?? db)
+		.update(usersDataTable)
+		.set(fields)
+		.where(eq(usersDataTable.userId, userId));
 }
 
 export async function updateUserData(
@@ -107,11 +98,11 @@ export async function updateUserData(
 ) {
 	await db.transaction(async (tx) => {
 		if (Object.keys(userFields).length) {
-			await tx.update(usersTable).set(userFields).where(eq(usersTable.id, userId));
+			await updateUser(userId, userFields, tx);
 		}
 
 		if (Object.keys(userDataFields).length) {
-			await tx.update(usersDataTable).set(userDataFields).where(eq(usersDataTable.userId, userId));
+			await updateProfile(userId, userDataFields, tx);
 		}
 	});
 }

@@ -14,7 +14,7 @@
 	let logoutForm: HTMLFormElement;
 </script>
 
-<div class={['userMenu', className]}>
+<div class={['user-menu', className]}>
 	<form method="POST" action="?/logout" use:enhance bind:this={logoutForm}></form>
 	<DropdownMenu.Root>
 		<DropdownMenu.Trigger class="user-menu__trigger" aria-label="Меню пользователя">

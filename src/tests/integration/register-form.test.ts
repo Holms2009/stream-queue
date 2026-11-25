@@ -1,27 +1,19 @@
 import { chromium, type Browser, type Page } from 'playwright';
-import { createServer, type ViteDevServer } from 'vite';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, inject } from 'vitest';
 
 import { REGISTRATION } from '../mock/registration';
 
 describe('отправка формы регистрации', () => {
-	let server: ViteDevServer;
 	let browser: Browser;
 	let page: Page;
-	let origin: string;
+	const origin = inject('integrationOrigin');
 
 	beforeAll(async () => {
-		server = await createServer({ server: { host: '127.0.0.1', port: 0 }, logLevel: 'error' });
-		await server.listen();
-		const address = server.httpServer?.address();
-		if (!address || typeof address === 'string') throw new Error('Не удалось запустить сервер');
-		origin = `http://127.0.0.1:${address.port}`;
 		browser = await chromium.launch({ headless: true });
 	});
 
 	afterAll(async () => {
 		await browser?.close();
-		await server?.close();
 	});
 
 	beforeEach(async () => {

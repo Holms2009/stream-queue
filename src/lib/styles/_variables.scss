@@ -3,20 +3,22 @@
 $COLOR_WHITE_1: #ececec;
 $COLOR_WHITE_2: #e1e1e1;
 $COLOR_WHITE_3: #d6d6d6;
-$COLOR_BLACK_1: #252525;
-$COLOR_BLACK_2: #2c2c2c;
+$COLOR_BLACK_1: #202020;
+$COLOR_BLACK_2: #292929;
 $COLOR_GRAY_1: #6b6b6b;
 $COLOR_GRAY_2: #a3a3a3;
 $COLOR_BLUE_1: #1288bb;
-$COLOR_BLUE_1_HOVER: #1a9ed6;
-$COLOR_BLUE_1_ACTIVE: #0e6d96;
+$COLOR_BLUE_1_HOVER: oklch(from #{$COLOR_BLUE_1} calc(l + 0.068) c h);
+$COLOR_BLUE_1_ACTIVE: oklch(from #{$COLOR_BLUE_1} calc(l - 0.087) c h);
 $COLOR_PURPLE_1: #8e31c4;
 $COLOR_PURPLE_1_HOVER: #a748dc;
 $COLOR_PURPLE_1_ACTIVE: #70269a;
-$COLOR_RED_1: #dd3b49;
+$COLOR_RED_1: #dd5661;
 
 // Shadows
-$SHADOW_FLOATING: 0 0 0 1px rgba($COLOR_GRAY_2, 0.15), 0 8px 24px rgba(0, 0, 0, 0.65);
+$SHADOW_FLOATING:
+	0 0 0 1px rgba($COLOR_GRAY_2, 0.15),
+	0 8px 24px rgba(0, 0, 0, 0.65);
 
 //Breakpoints
 

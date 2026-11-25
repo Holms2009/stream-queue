@@ -1,13 +1,10 @@
-import { sql } from 'drizzle-orm';
 import {
 	boolean,
-	check,
 	index,
 	integer,
 	pgTable,
 	text,
 	timestamp,
-	uniqueIndex,
 	uuid,
 	varchar
 } from 'drizzle-orm/pg-core';
@@ -93,17 +90,6 @@ export const requestsTable = pgTable(
 		createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull()
 	},
 	(table) => [
-		check(
-			'requests_status_check',
-			sql`${table.status} IN ('waiting', 'active', 'deferred', 'completed', 'canceled', 'deleted')`
-		),
-		check(
-			'requests_position_check',
-			sql`(${table.status} IN ('waiting', 'deferred') AND ${table.position} IS NOT NULL AND ${table.position} > 0) OR (${table.status} NOT IN ('waiting', 'deferred') AND ${table.position} IS NULL)`
-		),
-		uniqueIndex('requests_one_active_per_queue_idx')
-			.on(table.queueId)
-			.where(sql`${table.status} = 'active'`),
 		index('requests_queue_status_position_id_idx').on(
 			table.queueId,
 			table.status,

@@ -1,7 +1,7 @@
 import { and, eq, gt } from 'drizzle-orm';
 
 import { db } from '@db';
-import { passwordResetTokens, sessionsTable, usersTable } from '@db/schema';
+import { passwordResetTokens } from '@db/schema';
 import type { TDatabaseTransaction } from '@db/types';
 
 export async function deletePasswordResetTokens(
@@ -16,32 +16,21 @@ export async function deletePasswordResetTokens(
 export async function addPasswordResetToken(
 	userId: number,
 	tokenHash: string,
+	expiresAt: Date,
 	transaction?: TDatabaseTransaction
 ) {
 	await (transaction ?? db).insert(passwordResetTokens).values({
 		userId,
 		tokenHash,
-		expiresAt: new Date(Date.now() + 36e5)
+		expiresAt
 	});
 }
 
-export async function replacePasswordResetToken(userId: number, tokenHash: string) {
-	await db.transaction(async (transaction) => {
-		const [user] = await transaction
-			.select({ id: usersTable.id })
-			.from(usersTable)
-			.where(eq(usersTable.id, userId))
-			.for('update');
-
-		if (!user) throw new Error('User not found while creating password reset token');
-
-		await deletePasswordResetTokens(userId, transaction);
-		await addPasswordResetToken(userId, tokenHash, transaction);
-	});
-}
-
-export async function getPasswordResetToken(tokenHash: string) {
-	const [record] = await db
+export async function getPasswordResetToken(
+	tokenHash: string,
+	transaction?: TDatabaseTransaction
+): Promise<typeof passwordResetTokens.$inferSelect | null> {
+	const [record] = await (transaction ?? db)
 		.select()
 		.from(passwordResetTokens)
 		.where(eq(passwordResetTokens.tokenHash, tokenHash))
@@ -50,40 +39,21 @@ export async function getPasswordResetToken(tokenHash: string) {
 	return record ?? null;
 }
 
-export async function resetPasswordByTokenHash(tokenHash: string, passwordHash: string) {
-	return await db.transaction(async (transaction) => {
-		const [token] = await transaction
-			.select({ userId: passwordResetTokens.userId })
-			.from(passwordResetTokens)
-			.where(eq(passwordResetTokens.tokenHash, tokenHash))
-			.limit(1);
-
-		if (!token) return false;
-
-		const [user] = await transaction
-			.select({ id: usersTable.id })
-			.from(usersTable)
-			.where(eq(usersTable.id, token.userId))
-			.for('update');
-
-		if (!user) return false;
-
-		const [consumedToken] = await transaction
-			.delete(passwordResetTokens)
-			.where(
-				and(
-					eq(passwordResetTokens.userId, user.id),
-					eq(passwordResetTokens.tokenHash, tokenHash),
-					gt(passwordResetTokens.expiresAt, new Date())
-				)
+export async function consumePasswordResetToken(
+	userId: number,
+	tokenHash: string,
+	transaction?: TDatabaseTransaction
+) {
+	const [token] = await (transaction ?? db)
+		.delete(passwordResetTokens)
+		.where(
+			and(
+				eq(passwordResetTokens.userId, userId),
+				eq(passwordResetTokens.tokenHash, tokenHash),
+				gt(passwordResetTokens.expiresAt, new Date())
 			)
-			.returning({ id: passwordResetTokens.id });
-
-		if (!consumedToken) return false;
-
-		await transaction.update(usersTable).set({ passwordHash }).where(eq(usersTable.id, user.id));
-		await transaction.delete(sessionsTable).where(eq(sessionsTable.userId, user.id));
-
-		return true;
-	});
+		)
+		.returning({ id: passwordResetTokens.id });
+	return token ?? null;
 }
+

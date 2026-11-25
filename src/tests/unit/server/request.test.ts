@@ -1,14 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { addRequest } from '@db/actions/request';
+import { getLastRequestPosition, insertRequest, withRequestTransaction } from '@db/actions/request';
+import { getQueue } from '@db/actions/queue';
+import type { TDatabaseTransaction } from '@db/types';
 import { createRequest } from '@server/request';
 import { QUEUE } from '../../mock/queue';
 
-vi.mock('@db/actions/request', () => ({ addRequest: vi.fn() }));
+vi.mock('@db/actions/request', () => ({
+	withRequestTransaction: vi.fn(),
+	getLastRequestPosition: vi.fn(),
+	insertRequest: vi.fn()
+}));
+vi.mock('@db/actions/queue', () => ({ getQueue: vi.fn() }));
+
+const transaction = {} as TDatabaseTransaction;
 
 describe('создание заказа', () => {
-	beforeEach(() => vi.resetAllMocks());
+	beforeEach(() => {
+		vi.resetAllMocks();
+		vi.mocked(withRequestTransaction).mockImplementation(async (callback) => callback(transaction));
+		vi.mocked(getQueue).mockResolvedValue({ id: QUEUE.queueId } as NonNullable<
+			Awaited<ReturnType<typeof getQueue>>
+		>);
+		vi.mocked(getLastRequestPosition).mockResolvedValue(null);
+	});
 	it('удаляет пробелы по краям и передаёт данные в БД', async () => {
-		vi.mocked(addRequest).mockResolvedValue(true);
 		expect(
 			await createRequest({
 				userId: QUEUE.userId,
@@ -16,10 +31,16 @@ describe('создание заказа', () => {
 				input: QUEUE.requestInput
 			})
 		).toEqual({ success: true });
-		expect(addRequest).toHaveBeenCalledExactlyOnceWith(QUEUE.userId, QUEUE.queueId, {
-			title: QUEUE.title,
-			viewerName: QUEUE.viewerName
-		});
+		expect(insertRequest).toHaveBeenCalledExactlyOnceWith(
+			{
+				queueId: QUEUE.queueId,
+				title: QUEUE.title,
+				viewerName: QUEUE.viewerName,
+				status: 'waiting',
+				position: 1
+			},
+			transaction
+		);
 	});
 	it.each([
 		{ title: '', viewerName: QUEUE.viewerName, field: 'title' },
@@ -34,10 +55,10 @@ describe('создание заказа', () => {
 		});
 		if (result.success || result.reason !== 'invalid') throw new Error('Ожидалась ошибка поля');
 		expect(result.errors.fieldErrors[field]).toBeDefined();
-		expect(addRequest).not.toHaveBeenCalled();
+		expect(withRequestTransaction).not.toHaveBeenCalled();
 	});
 	it('возвращает ошибку для недоступной очереди', async () => {
-		vi.mocked(addRequest).mockResolvedValue(false);
+		vi.mocked(getQueue).mockResolvedValue(null);
 		expect(
 			await createRequest({
 				userId: QUEUE.userId,

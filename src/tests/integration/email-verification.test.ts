@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { DATABASE_URL } from '$app/env/private';
 import { db } from '@db';
-import { confirmEmailByTokenHash, replaceEmailVerifyToken } from '@db/actions/emailVerify';
+import { confirmEmailByTokenHash } from '@server/auth/email-verification';
+import { replaceEmailVerifyToken } from '@server/auth/tokens';
 import { emailVerifyTokensTable, usersTable } from '@db/schema';
 import { EMAIL_VERIFICATION } from '../mock/email-verification';
 
