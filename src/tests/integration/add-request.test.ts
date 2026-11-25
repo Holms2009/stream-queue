@@ -3,7 +3,7 @@ import { asc, eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { DATABASE_URL } from '$app/env/private';
 import { db } from '@db';
-import { addRequest } from '@db/actions/request';
+import { createRequest } from '@server/request';
 import { queuesTable, requestsTable, usersTable } from '@db/schema';
 import { QUEUE } from '../mock/queue';
 import { REGISTRATION } from '../mock/registration';
@@ -43,18 +43,20 @@ describe('добавление заказа в БД', () => {
 			await db.delete(usersTable).where(eq(usersTable.id, otherUserId));
 	});
 	it('добавляет в конец ожидающих независимо от позиций отложенных', async () => {
-		await db
-			.insert(requestsTable)
-			.values({
-				queueId,
-				title: QUEUE.deferredTitle,
-				viewerName: QUEUE.viewerName,
-				status: 'deferred',
-				position: 10
-			});
+		await db.insert(requestsTable).values({
+			queueId,
+			title: QUEUE.deferredTitle,
+			viewerName: QUEUE.viewerName,
+			status: 'deferred',
+			position: 10
+		});
 		const data = { title: QUEUE.title, viewerName: QUEUE.viewerName };
-		expect(await addRequest(userId!, queueId, data)).toBe(true);
-		expect(await addRequest(userId!, queueId, data)).toBe(true);
+		expect(await createRequest({ userId: userId!, queueId, input: data })).toEqual({
+			success: true
+		});
+		expect(await createRequest({ userId: userId!, queueId, input: data })).toEqual({
+			success: true
+		});
 		const rows = await db
 			.select()
 			.from(requestsTable)
@@ -71,8 +73,11 @@ describe('добавление заказа в БД', () => {
 	it('при одновременном добавлении сохраняет разные последовательные позиции', async () => {
 		const data = { title: QUEUE.title, viewerName: QUEUE.viewerName };
 		expect(
-			await Promise.all([addRequest(userId!, queueId, data), addRequest(userId!, queueId, data)])
-		).toEqual([true, true]);
+			await Promise.all([
+				createRequest({ userId: userId!, queueId, input: data }),
+				createRequest({ userId: userId!, queueId, input: data })
+			])
+		).toEqual([{ success: true }, { success: true }]);
 		const rows = await db
 			.select()
 			.from(requestsTable)
@@ -82,8 +87,13 @@ describe('добавление заказа в БД', () => {
 	});
 	it('не добавляет заказ в чужую или несуществующую очередь', async () => {
 		const data = { title: QUEUE.title, viewerName: QUEUE.viewerName };
-		expect(await addRequest(otherUserId!, queueId, data)).toBe(false);
-		expect(await addRequest(userId!, QUEUE.missingId, data)).toBe(false);
+		expect(await createRequest({ userId: otherUserId!, queueId, input: data })).toEqual({
+			success: false,
+			reason: 'queue-not-found'
+		});
+		expect(await createRequest({ userId: userId!, queueId: QUEUE.missingId, input: data })).toEqual(
+			{ success: false, reason: 'queue-not-found' }
+		);
 		expect(
 			await db.select().from(requestsTable).where(eq(requestsTable.queueId, queueId))
 		).toHaveLength(0);

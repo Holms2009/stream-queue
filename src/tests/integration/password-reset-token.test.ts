@@ -4,7 +4,8 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { DATABASE_URL } from '$app/env/private';
 import { db } from '@db';
-import { replacePasswordResetToken, resetPasswordByTokenHash } from '@db/actions/passwordReset';
+import { replacePasswordResetToken } from '@server/auth/tokens';
+import { resetPasswordByTokenHash } from '@server/auth/password-reset';
 import { passwordResetTokens, sessionsTable, usersTable } from '@db/schema';
 import { PASSWORD_RESET } from '../mock/password-reset';
 

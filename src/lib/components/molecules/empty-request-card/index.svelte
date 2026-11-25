@@ -3,17 +3,34 @@
 
 	type Props = {
 		class?: string;
+		canTakeRequest?: boolean;
+		disabled?: boolean;
+		onButtonClick?: () => void;
 	};
 
-	let { class: className = '' }: Props = $props();
+	let {
+		class: className = '',
+		canTakeRequest = false,
+		disabled = false,
+		onButtonClick
+	}: Props = $props();
 </script>
 
 <div class={['empty-request-card', className]}>
 	<div class="empty-request-card__header">
 		<Volleyball class="empty-request-card__icon" size={20} />
 	</div>
-	<h4 class="empty-request-card__title">Нет активного заказа</h4>
-	<button class="empty-request-card__button" title="Взять заказ"><Play size="100%" /></button>
+	<button
+		class="empty-request-card__button"
+		title="Взять заказ"
+		disabled={!canTakeRequest || disabled}
+		onclick={onButtonClick}
+	>
+		<span>{canTakeRequest ? 'Взять заказ' : 'Нет заказов'}</span>
+		{#if canTakeRequest}
+			<Play size="30" />
+		{/if}
+	</button>
 </div>
 
 <style lang="scss">

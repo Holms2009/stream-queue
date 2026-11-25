@@ -22,23 +22,13 @@
 		align-self: stretch;
 	}
 
-	&__title {
+	&__button {
 		@include heading-4;
 
-		margin-top: 24px;
-
-		color: $COLOR_GRAY_1;
-		text-align: center;
-
-		@media screen and (min-width: $BREAKPOINT_SM) {
-			margin-top: 16px;
-		}
-	}
-
-	&__button {
-		margin-top: 4px;
-		width: 45px;
-		height: 45px;
+		margin-top: 48px;
+		display: flex;
+		align-items: center;
+		gap: 8px;
 
 		color: $COLOR_GRAY_1;
 
@@ -48,8 +38,17 @@
 		transition: color 0.3s ease;
 		cursor: pointer;
 
-		&:hover {
+		&:not(:disabled):hover {
 			color: $COLOR_GRAY_2;
+		}
+
+		&:disabled {
+			pointer-events: none;
+			cursor: default;
+		}
+
+		@media screen and (min-width: $BREAKPOINT_SM) {
+			margin-top: 32px;
 		}
 	}
 }

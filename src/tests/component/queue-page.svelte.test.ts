@@ -24,6 +24,6 @@ describe('главная страница очереди', () => {
 	});
 	it('показывает пустую карточку при отсутствии активного заказа', async () => {
 		const screen = renderPage(QUEUE.pageRequests.filter(({ status }) => status !== 'active'));
-		await expect.element(screen.getByText('Нет активного заказа')).toBeVisible();
+		await expect.element(screen.getByRole('button', { name: 'Взять заказ' })).toBeVisible();
 	});
 });

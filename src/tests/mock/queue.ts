@@ -2,6 +2,7 @@ export const QUEUE = {
 	title: 'Тестовый заказ',
 	viewerName: 'Зритель',
 	queueId: 1,
+	invalidIds: [0, -1, 1.5, 2_147_483_648, null],
 	userId: 15,
 	requestInput: { title: '  Тестовый заказ  ', viewerName: '  Зритель  ' },
 	tooLongTitle: 'а'.repeat(256),
@@ -23,6 +24,12 @@ export const QUEUE = {
 	description: 'Описание заказа',
 	missingId: -1,
 	invalidStatus: 'unknown',
+	removalActions: [
+		{ button: 'Отменить заказ', status: 'canceled' },
+		{ button: 'Удалить', status: 'deleted' }
+	] as const,
+	previousStatuses: ['completed', 'deferred'] as const,
+	deferredPosition: 4,
 	olderDate: new Date('2026-01-01T00:00:00Z'),
 	newerDate: new Date('2026-01-02T00:00:00Z'),
 	activeTitle: 'Активный заказ',

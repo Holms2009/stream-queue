@@ -1,0 +1,88 @@
+@use '/src/lib/styles/index' as *;
+
+:global {
+	.modal {
+		&__overlay {
+			position: fixed;
+			inset: 0;
+			z-index: 100;
+
+			background: rgba(0, 0, 0, 0.5);
+			opacity: 1;
+
+			transition: opacity 0.3s ease;
+
+			&[data-starting-style],
+			&[data-ending-style] {
+				opacity: 0;
+			}
+		}
+
+		&__content {
+			position: fixed;
+			top: 50%;
+			left: 50%;
+			z-index: 101;
+
+			padding: 20px;
+			width: min(350px, calc(100% - 32px));
+			max-height: calc(100vh - 32px);
+
+			color: $COLOR_WHITE_1;
+
+			background: $COLOR_BLACK_2;
+			border-radius: $RADIUS_MEDIUM;
+			opacity: 1;
+
+			transform: translate(-50%, -50%);
+			transition:
+				transform 0.3s cubic-bezier(0.34, 2, 0.64, 1),
+				opacity 0.3s ease;
+
+			&[data-starting-style] {
+				transform: translate(-50%, calc(-50% + 30px));
+			}
+
+			&[data-ending-style] {
+				opacity: 0;
+			}
+		}
+
+		&__header {
+			display: flex;
+			align-items: flex-start;
+			justify-content: space-between;
+			gap: 16px;
+		}
+
+		&__title {
+			@include heading-5;
+
+			margin: 0;
+		}
+
+		&__close {
+			padding: 0;
+			width: 20px;
+			height: 20px;
+			display: flex;
+
+			color: $COLOR_GRAY_2;
+
+			background: none;
+			border: 0;
+
+			transition: color 0.3s ease;
+			cursor: pointer;
+
+			&:hover {
+				color: $COLOR_WHITE_1;
+			}
+		}
+
+		&__description {
+			margin: 16px 0;
+			color: $COLOR_GRAY_2;
+		}
+	}
+}

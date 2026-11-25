@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 
 import { db } from '@db';
 import { sessionsTable } from '@db/schema';
-import type { TSession } from '@db/types';
+import type { TDatabaseTransaction, TSession } from '@db/types';
 
 export async function getSessionByID(sessionId: string) {
 	const row = await db.select().from(sessionsTable).where(eq(sessionsTable.id, sessionId));
@@ -26,8 +26,11 @@ export async function deleteSession(sessionId: string): Promise<void> {
 	await db.delete(sessionsTable).where(eq(sessionsTable.id, sessionId));
 }
 
-export async function deleteUserSessions(userId: number): Promise<void> {
-	await db.delete(sessionsTable).where(eq(sessionsTable.userId, userId));
+export async function deleteUserSessions(
+	userId: number,
+	transaction?: TDatabaseTransaction
+): Promise<void> {
+	await (transaction ?? db).delete(sessionsTable).where(eq(sessionsTable.userId, userId));
 }
 
 export async function updateSession(sessionId: string, expiresAt: Date): Promise<TSession | null> {

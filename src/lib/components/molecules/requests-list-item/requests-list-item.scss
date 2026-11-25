@@ -62,23 +62,37 @@
 		cursor: pointer;
 	}
 
-	&__to-end {
+	&__button {
 		@include text-12;
 
 		margin-left: 8px;
-		padding: 4px 8px;
+		padding: 4px;
+		width: 30px;
+		height: 30px;
 
-		color: $COLOR_GRAY_2;
+		color: $COLOR_GRAY_1;
 
 		background: unset;
-		border: 1px solid $COLOR_GRAY_1;
+		border: none;
 		border-radius: 50px;
 
 		transition: all 0.3s ease;
 		cursor: pointer;
 
 		&:hover {
-			border-color: $COLOR_GRAY_2;
+			color: $COLOR_GRAY_2;
+		}
+
+		&_activate {
+			color: $COLOR_BLUE_1;
+
+			&:hover {
+				color: $COLOR_BLUE_1_HOVER;
+			}
+		}
+
+		&_remove {
+			color: $COLOR_RED_1;
 		}
 	}
 }

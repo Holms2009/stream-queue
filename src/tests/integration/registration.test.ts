@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { DATABASE_URL } from '$app/env/private';
 import { db } from '@db';
-import { addUserWithData } from '@db/actions/user';
+import { addUserWithData } from '@server/auth/registration';
 import * as queueActions from '@db/actions/queue';
 import { queuesTable, usersDataTable, usersTable } from '@db/schema';
 import { REGISTRATION } from '../mock/registration';

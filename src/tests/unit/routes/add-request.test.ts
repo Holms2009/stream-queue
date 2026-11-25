@@ -9,10 +9,10 @@ vi.mock('@db/actions/queue', () => ({ getLatestQueueWithRequests: vi.fn() }));
 vi.mock('@db/actions/session', () => ({ deleteSession: vi.fn() }));
 vi.mock('@server/auth/session', () => ({ deleteSessionTokenCookie: vi.fn() }));
 
-function actionEvent() {
+function actionEvent(queueId: string | null = String(QUEUE.queueId), title = QUEUE.title) {
 	const form = new FormData();
-	form.set('queueId', String(QUEUE.queueId));
-	form.set('title', QUEUE.title);
+	if (queueId !== null) form.set('queueId', queueId);
+	form.set('title', title);
 	form.set('viewerName', QUEUE.viewerName);
 	return {
 		locals: {
@@ -32,6 +32,17 @@ describe('action добавления заказа', () => {
 			queueId: QUEUE.queueId,
 			input: { title: QUEUE.title, viewerName: QUEUE.viewerName }
 		});
+	});
+	it.each(QUEUE.invalidIds)('отклоняет некорректный ID очереди %s', async (queueId) => {
+		expect(await actions.addRequest(actionEvent(queueId === null ? null : String(queueId)))).toMatchObject({ status: 404 });
+		expect(createRequest).not.toHaveBeenCalled();
+	});
+	it('возвращает ошибки полей при некорректных полях и ID очереди', async () => {
+		expect(await actions.addRequest(actionEvent('0', ''))).toMatchObject({
+			status: 400,
+			data: { status: 'invalid', errors: QUEUE.invalidErrors }
+		});
+		expect(createRequest).not.toHaveBeenCalled();
 	});
 	it('возвращает ошибки полей в общем формате', async () => {
 		vi.mocked(createRequest).mockResolvedValue({

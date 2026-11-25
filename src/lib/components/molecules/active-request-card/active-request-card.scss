@@ -74,10 +74,9 @@
 		&__button {
 			width: 100% !important;
 
-			&:last-child {
-				@media screen and (min-width: $BREAKPOINT_SM) {
-					max-width: 30%;
-				}
+			&:first-child {
+				margin-right: auto;
+				min-width: 50%;
 			}
 		}
 

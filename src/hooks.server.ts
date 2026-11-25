@@ -54,7 +54,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 		redirect(303, resolvePath('/(protected)'));
 	}
 
-	if (event.route.id && !PUBLIC_ROUTES.has(event.route.id) && !event.locals.session) {
+	if (event.route.id && !['/api/requests/activate', '/api/requests/change-status'].includes(event.route.id) && !PUBLIC_ROUTES.has(event.route.id) && !event.locals.session) {
 		redirect(303, '/login');
 	}
 

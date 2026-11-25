@@ -1,21 +1,19 @@
 import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { chromium, type Browser, type Page } from 'playwright';
-import { createServer, type ViteDevServer } from 'vite';
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, inject } from 'vitest';
 
 import { DATABASE_URL } from '$app/env/private';
 import { db } from '@db';
-import { addUserWithData } from '@db/actions/user';
+import { addUserWithData } from '@server/auth/registration';
 import { usersTable } from '@db/schema';
 import { hashPassword } from '@server/auth/password';
 import { LOGIN } from '../mock/login';
 
 describe('отправка формы входа', () => {
-	let server: ViteDevServer;
 	let browser: Browser;
 	let page: Page;
-	let origin: string;
+	const origin = inject('integrationOrigin');
 	let userId: number | null = null;
 	const email = `vitest-${randomUUID()}@example.com`;
 
@@ -30,17 +28,11 @@ describe('отправка формы входа', () => {
 
 		userId = await addUserWithData(email, await hashPassword(LOGIN.data.password));
 		if (userId === null) throw new Error('Не удалось создать тестового пользователя');
-		server = await createServer({ server: { host: '127.0.0.1', port: 0 }, logLevel: 'error' });
-		await server.listen();
-		const address = server.httpServer?.address();
-		if (!address || typeof address === 'string') throw new Error('Не удалось запустить сервер');
-		origin = `http://127.0.0.1:${address.port}`;
 		browser = await chromium.launch({ headless: true });
 	}, 30000);
 
 	afterAll(async () => {
 		await browser?.close();
-		await server?.close();
 		if (userId !== null) await db.delete(usersTable).where(eq(usersTable.id, userId));
 	});
 

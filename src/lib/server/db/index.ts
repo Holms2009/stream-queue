@@ -8,3 +8,7 @@ if (!DATABASE_URL) throw new Error('DATABASE_URL is not set');
 const client = postgres(DATABASE_URL);
 
 export const db = drizzle(client, { schema });
+
+export async function withTransaction<T>(callback: Parameters<typeof db.transaction<T>>[0]) {
+	return await db.transaction(callback);
+}
