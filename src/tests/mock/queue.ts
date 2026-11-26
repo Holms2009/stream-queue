@@ -24,8 +24,8 @@ export const QUEUE = {
 	description: 'Описание заказа',
 	missingId: -1,
 	invalidStatus: 'unknown',
+	removedStatus: 'canceled',
 	removalActions: [
-		{ button: 'Отменить заказ', status: 'canceled' },
 		{ button: 'Удалить', status: 'deleted' }
 	] as const,
 	previousStatuses: ['completed', 'deferred'] as const,
@@ -71,5 +71,5 @@ export const QUEUE = {
 		}
 	],
 	statusesWithPosition: ['waiting', 'deferred'] as const,
-	statusesWithoutPosition: ['active', 'completed', 'canceled', 'deleted'] as const
+	statusesWithoutPosition: ['active', 'completed', 'deleted'] as const
 };

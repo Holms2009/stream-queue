@@ -8,12 +8,13 @@
 		title: string;
 		description?: string;
 		children?: Snippet;
+		onOpenChange?: (open: boolean) => void;
 	};
 
-	let { open = $bindable(false), title, description, children }: Props = $props();
+	let { open = $bindable(false), title, description, children, onOpenChange }: Props = $props();
 </script>
 
-<Dialog.Root bind:open>
+<Dialog.Root bind:open {onOpenChange}>
 	<Dialog.Portal>
 		<Dialog.Overlay class="modal__overlay" />
 		<Dialog.Content

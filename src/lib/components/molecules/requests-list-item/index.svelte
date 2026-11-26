@@ -1,27 +1,27 @@
 <script lang="ts">
-	import { CircleX, Hourglass, ListEnd, Play, SquareChevronsUp, Trash } from '@lucide/svelte';
+	import { Hourglass, ListEnd, Play, SquareChevronsUp, Trash } from '@lucide/svelte';
 	import { fade, fly } from 'svelte/transition';
 
 	type Props = {
 		class?: string;
 		index: number;
 		data: { title: string; author: string; status: string };
-		onMove: (moveType: 'to-end' | 'return-to-queue' | 'deffer') => void;
+		onMoveToEnd: () => void;
+		onChangeStatus: (status: 'waiting' | 'deferred') => void;
 		onActivate?: () => void;
 		disabled?: boolean;
 		onRemove?: () => void;
-		onCancel?: () => void;
 	};
 
 	let {
 		class: className = '',
 		index,
 		data,
-		onMove,
+		onMoveToEnd,
+		onChangeStatus,
 		onActivate = () => {},
 		disabled = false,
-		onRemove = () => {},
-		onCancel = () => {}
+		onRemove = () => {}
 	}: Props = $props();
 </script>
 
@@ -44,12 +44,12 @@
 		>
 			<Play size="100%" />
 		</button>
-		<button class="requests-list-item__button" onclick={() => onMove('to-end')} title="В конец">
+		<button class="requests-list-item__button" onclick={onMoveToEnd} title="В конец">
 			<ListEnd size="100%" />
 		</button>
 		<button
 			class="requests-list-item__button"
-			onclick={() => onMove(data.status === 'deferred' ? 'return-to-queue' : 'deffer')}
+			onclick={() => onChangeStatus(data.status === 'deferred' ? 'waiting' : 'deferred')}
 			{disabled}
 			title={data.status === 'deferred' ? 'Вернуть в очередь' : 'Отложить'}
 		>
@@ -58,9 +58,6 @@
 			{:else}
 				<Hourglass size="100%" />
 			{/if}
-		</button>
-		<button class="requests-list-item__button" onclick={onCancel} {disabled} title="Отменить заказ">
-			<CircleX size="100%" />
 		</button>
 		<button
 			class="requests-list-item__button requests-list-item__button_remove"

@@ -21,6 +21,9 @@
 		"test": "npm run test:unit -- --run"
 	},
 	"dependencies": {
+		"@dnd-kit/abstract": "^0.5.3",
+		"@dnd-kit/dom": "^0.5.3",
+		"@dnd-kit/svelte": "^0.5.3",
 		"@lucide/svelte": "1.80.0",
 		"@node-rs/argon2": "2.2.2",
 		"@oslojs/crypto": "1.0.1",
@@ -31,7 +34,6 @@
 		"react": "19.3.1",
 		"react-dom": "19.3.1",
 		"resend": "6.39.0",
-		"svelte-dnd-action": "0.9.81",
 		"zod": "4.6.7"
 	},
 	"devDependencies": {

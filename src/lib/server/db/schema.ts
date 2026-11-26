@@ -84,7 +84,7 @@ export const requestsTable = pgTable(
 		viewerName: text().notNull(),
 		description: text(),
 		status: text()
-			.$type<'waiting' | 'active' | 'deferred' | 'completed' | 'canceled' | 'deleted'>()
+			.$type<'waiting' | 'active' | 'deferred' | 'completed' | 'deleted'>()
 			.notNull(),
 		position: integer(),
 		createdAt: timestamp('createdAt', { withTimezone: true }).defaultNow().notNull()

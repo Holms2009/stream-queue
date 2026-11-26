@@ -1,8 +1,9 @@
 import { z } from 'zod';
 
 export const requestIdSchema = z.number().int().positive().max(2_147_483_647);
-export const requestStatusSchema = z.enum(['waiting', 'active', 'deferred', 'completed', 'canceled', 'deleted']);
+export const requestStatusSchema = z.enum(['waiting', 'active', 'deferred', 'completed', 'deleted']);
 export const requestIdsSchema = z.object({ queueId: requestIdSchema, requestId: requestIdSchema });
+export const moveRequestSchema = requestIdsSchema.extend({ position: requestIdSchema });
 export const activateRequestSchema = requestIdsSchema.extend({
 	previousStatus: z.enum(['completed', 'deferred']).optional()
 });
