@@ -8,13 +8,46 @@ import {
 	updateRequest,
 	withRequestTransaction
 } from '@db/actions/request';
-import { getQueue } from '@db/actions/queue';
+import { getQueue, getQueueRequests } from '@db/actions/queue';
 import type { requestsTable } from '@db/schema';
 import type { CreateRequestData } from '../utils/request/validation';
 import type { AppErrors } from '../utils/errors';
 import { createRequestSchema, requestPositionSchema } from '../utils/request/validation';
+import { moveRequest as reorderRequests } from '../utils/request';
 
 export type RequestStatus = typeof requestsTable.$inferSelect.status;
+
+export async function moveRequest(
+	userId: number,
+	queueId: number,
+	requestId: number,
+	position: number
+) {
+	return await withRequestTransaction(async (transaction) => {
+		const queue = await getQueue(userId, queueId, transaction, true);
+
+		if (!queue) return false;
+
+		const requests = await getQueueRequests(userId, queueId, transaction);
+		const selected = requests.find((request) => request.id === requestId);
+
+		if (!selected || (selected.status !== 'waiting' && selected.status !== 'deferred')) {
+			return false;
+		}
+
+		if (position > requests.filter((request) => request.status === selected.status).length) {
+			return false;
+		}
+
+		for (const request of reorderRequests(requests, requestId, position)) {
+			if (request.status === selected.status) {
+				await updateRequest(request.id, { position: request.position }, transaction);
+			}
+		}
+
+		return true;
+	});
+}
 
 export async function createRequest({
 	userId,
@@ -73,7 +106,13 @@ export async function changeRequestStatus({
 		return { success: false as const };
 	}
 	return {
-		success: await changeStatusInQueue(userId, queueId, requestId, status, parsedPosition.data ?? null)
+		success: await changeStatusInQueue(
+			userId,
+			queueId,
+			requestId,
+			status,
+			parsedPosition.data ?? null
+		)
 	};
 }
 
@@ -140,9 +179,10 @@ async function activateRequestInQueue(
 		const active = await getActiveRequest(queue.id, transaction);
 
 		if (active) {
-			const position = previousStatus === 'deferred'
-				? ((await getLastRequestPosition(queue.id, 'deferred', transaction)) ?? 0) + 1
-				: null;
+			const position =
+				previousStatus === 'deferred'
+					? ((await getLastRequestPosition(queue.id, 'deferred', transaction)) ?? 0) + 1
+					: null;
 			await updateRequest(active.id, { status: previousStatus, position }, transaction);
 		}
 

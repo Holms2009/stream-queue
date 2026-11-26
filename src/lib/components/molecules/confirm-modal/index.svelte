@@ -5,22 +5,32 @@
 		open?: boolean;
 		title?: string;
 		onConfirm: () => void;
+		onClose?: () => void;
 	};
 
-	let { open = $bindable(false), title = 'Вы уверены?', onConfirm }: Props = $props();
+	let { open = $bindable(false), title = 'Вы уверены?', onConfirm, onClose }: Props = $props();
+
+	function close() {
+		open = false;
+		onClose?.();
+	}
 
 	function confirm() {
-		open = false;
 		onConfirm();
+		close();
 	}
 </script>
 
-<Modal bind:open {title}>
+<Modal
+	bind:open
+	{title}
+	onOpenChange={(isOpen) => {
+		if (!isOpen) onClose?.();
+	}}
+>
 	<div class="confirm-modal__buttons">
 		<Button class="confirm-modal__button" onclick={confirm}>Ок</Button>
-		<Button class="confirm-modal__button" variant="white" onclick={() => (open = false)}>
-			Отмена
-		</Button>
+		<Button class="confirm-modal__button" variant="white" onclick={close}>Отмена</Button>
 	</div>
 </Modal>
 

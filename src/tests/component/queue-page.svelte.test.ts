@@ -15,7 +15,7 @@ describe('главная страница очереди', () => {
 	it('показывает активный заказ и ожидающие перед отложенными', async () => {
 		const screen = renderPage(QUEUE.pageRequests);
 		await expect.element(screen.getByText(QUEUE.activeTitle)).toBeVisible();
-		await expect.element(screen.getByText('1 ожидают')).toBeVisible();
+		await expect.element(screen.getByText('1 ожидает')).toBeVisible();
 		await expect.element(screen.getByText(QUEUE.waitingTitle)).toBeVisible();
 		await expect.element(screen.getByText(QUEUE.deferredTitle)).toBeVisible();
 		await expect.element(screen.getByText(QUEUE.completedTitle)).not.toBeInTheDocument();

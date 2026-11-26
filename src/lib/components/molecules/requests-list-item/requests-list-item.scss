@@ -70,7 +70,7 @@
 		width: 30px;
 		height: 30px;
 
-		color: $COLOR_GRAY_1;
+		color: $COLOR_GRAY_2;
 
 		background: unset;
 		border: none;
@@ -80,7 +80,7 @@
 		cursor: pointer;
 
 		&:hover {
-			color: $COLOR_GRAY_2;
+			color: $COLOR_WHITE_3;
 		}
 
 		&_activate {
@@ -93,6 +93,12 @@
 
 		&_remove {
 			color: $COLOR_RED_1;
+		}
+
+		&:disabled {
+			color: $COLOR_GRAY_1 !important;
+
+			pointer-events: none;
 		}
 	}
 }
