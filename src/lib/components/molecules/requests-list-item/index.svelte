@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { Hourglass, ListEnd, Play, SquareChevronsUp, Trash } from '@lucide/svelte';
+	import { createDraggable, createDroppable } from '@dnd-kit/svelte';
+	import { KeyboardSensor, PointerActivationConstraints, PointerSensor } from '@dnd-kit/dom';
 	import { fade, fly } from 'svelte/transition';
+	import { untrack } from 'svelte';
 
 	type Props = {
 		class?: string;
-		index: number;
-		data: { title: string; author: string; status: string };
+		index: number | null;
+		data: { id: number; title: string; author: string; status: string };
+		dragDisabled?: boolean;
+		preview?: boolean;
 		onMoveToEnd: () => void;
 		onChangeStatus: (status: 'waiting' | 'deferred') => void;
 		onActivate?: () => void;
@@ -17,14 +22,37 @@
 		class: className = '',
 		index,
 		data,
+		dragDisabled = false,
+		preview = false,
 		onMoveToEnd,
 		onChangeStatus,
 		onActivate = () => {},
 		disabled = false,
 		onRemove = () => {}
 	}: Props = $props();
+
+	const isPreview = untrack(() => preview);
+	const draggable = isPreview ? null : createDraggable({
+		get id() { return data.id; },
+		get disabled() { return dragDisabled; },
+		sensors: [
+			PointerSensor.configure({
+				activationConstraints: [new PointerActivationConstraints.Delay({ value: 150, tolerance: 10 })]
+			}),
+			KeyboardSensor
+		]
+	});
+	const droppable = isPreview ? null : createDroppable({ get id() { return data.id; } });
 </script>
 
+<div
+	{@attach draggable?.attach}
+	{@attach droppable?.attach}
+	aria-label={data.title}
+	class:requests-list-item-wrapper_drag-source={draggable?.isDragSource}
+	class="requests-list-item-wrapper"
+>
+	<div class="requests-list-item-wrapper__content">
 <div
 	class={['requests-list-item', className]}
 	in:fly={{ y: 10, opacity: 1 }}
@@ -67,6 +95,8 @@
 		>
 			<Trash size="100%" />
 		</button>
+	</div>
+</div>
 	</div>
 </div>
 

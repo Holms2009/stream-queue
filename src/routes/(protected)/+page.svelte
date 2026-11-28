@@ -7,7 +7,11 @@
 		RequestSwitchModal
 	} from '@molecules';
 	import { RequestAddForm, RequestsList, UserMenu } from '@organisms';
-	import { activateRequest, changeRequestStatus, moveRequest as saveRequestMove } from '../../lib/utils/request/api';
+	import {
+		activateRequest,
+		changeRequestStatus,
+		moveRequest as saveRequestMove
+	} from '../../lib/utils/request/api';
 	import {
 		countQueueRequests,
 		getNextRequestPosition,
@@ -26,10 +30,12 @@
 	type RequestMove = { requestId: number; position: number };
 	let pendingMoves = $state<RequestMove[]>([]);
 	let savingMoves = $state(false);
-	let queueRequests = $derived(pendingMoves.reduce(
-		(requests, move) => moveRequest(requests, move.requestId, move.position),
-		sortQueueRequests(data.requests)
-	));
+	let queueRequests = $derived(
+		pendingMoves.reduce(
+			(requests, move) => moveRequest(requests, move.requestId, move.position),
+			sortQueueRequests(data.requests)
+		)
+	);
 	let dragPreview = $state<DragRequest[] | null>(null);
 	let displayedRequests: DragRequest[] = $derived(dragPreview ?? queueRequests);
 
@@ -41,19 +47,24 @@
 
 	async function saveMoves() {
 		if (savingMoves) return;
-		savingMoves = true;
+
 		let saved = 0;
+		savingMoves = true;
+
 		try {
 			while (saved < pendingMoves.length) {
 				await saveRequestMove({ queueId: data.queue.id, ...pendingMoves[saved] });
 				saved++;
 			}
+
 			await refreshAll();
+
 			pendingMoves = pendingMoves.slice(saved);
 		} catch (error) {
 			console.error('Не удалось переместить заказ:', error);
 			pendingMoves = [];
 			dragPreview = null;
+
 			try {
 				await refreshAll();
 			} catch (refreshError) {
@@ -61,6 +72,7 @@
 			}
 		} finally {
 			savingMoves = false;
+
 			if (pendingMoves.length) void saveMoves();
 		}
 	}
@@ -70,12 +82,25 @@
 		void saveMoves();
 	}
 
+	function handlePreviewChange(items: DragRequest[] | null) {
+		dragPreview = items;
+	}
+
+	function handleMoveToEnd(requestId: number) {
+		const request = queueRequests.find((item) => item.id === requestId);
+		if (request?.status === 'waiting' || request?.status === 'deferred') {
+			handleMoveRequest(requestId, counters[request.status]);
+		}
+	}
+
 	async function handleActivate(
 		requestId: number,
 		previousStatus: 'completed' | 'deferred' = 'completed'
 	) {
 		if (activationPending || savingMoves) return;
+
 		activationPending = true;
+
 		try {
 			await activateRequest({ queueId: data.queue.id, requestId, previousStatus });
 			await refreshAll();
@@ -136,6 +161,10 @@
 			void handleChangeRequestStatus(requestId, status);
 			pendingConfirmation = null;
 		};
+	}
+
+	function handleRemoveRequest(requestId: number) {
+		requestConfirmation(requestId, 'deleted');
 	}
 
 	function handleCompleteAndTakeNext() {
@@ -218,18 +247,13 @@
 	<RequestsList
 		requests={queueRequests}
 		items={displayedRequests}
-		waitingCount={counters.waiting}
 		disabled={activationPending || savingMoves}
 		dragDisabled={activationPending}
-		onPreviewChange={(items) => (dragPreview = items)}
+		onPreviewChange={handlePreviewChange}
 		onMove={handleMoveRequest}
 		onActivate={handleSelectRequest}
-		onRemove={(requestId) => requestConfirmation(requestId, 'deleted')}
-		onMoveToEnd={(requestId) => {
-			const request = queueRequests.find((item) => item.id === requestId);
-			if (request?.status === 'waiting' || request?.status === 'deferred')
-				handleMoveRequest(requestId, counters[request.status]);
-		}}
+		onRemove={handleRemoveRequest}
+		onMoveToEnd={handleMoveToEnd}
 		onChangeStatus={handleQueueStatusChange}
 	/>
 	<div class="main__border main__border_bottom"></div>
