@@ -1,5 +1,11 @@
 @use '/src/lib/styles/index' as *;
 
+.requests-list-item-wrapper {
+	&_drag-source { opacity: 0.3; }
+	&__content { transition: transform 150ms ease-out; }
+	&_drag-source &__content { transform: scaleX(0.97); }
+}
+
 .requests-list-item {
 	padding: 8px;
 	display: flex;

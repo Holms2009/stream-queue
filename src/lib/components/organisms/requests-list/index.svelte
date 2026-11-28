@@ -5,12 +5,10 @@
 	import type { ComponentProps } from 'svelte';
 	import { RequestsListItem } from '@molecules';
 	import { moveRequest, type DragRequest, type QueueGroup } from '../../../utils/request';
-	import SortableRequest from './sortable-request.svelte';
 
 	type Props = {
 		requests: DragRequest[];
 		items: DragRequest[];
-		waitingCount: number;
 		disabled: boolean;
 		dragDisabled: boolean;
 		onPreviewChange: (items: DragRequest[] | null) => void;
@@ -24,7 +22,6 @@
 	let {
 		requests,
 		items,
-		waitingCount,
 		disabled,
 		dragDisabled,
 		onPreviewChange,
@@ -83,9 +80,9 @@
 	<div class="requests-list" aria-label="Очередь заказов">
 		{#each items as request, index (request.id)}
 			<div animate:flip={{ duration: 300 }}>
-				<SortableRequest
-					{request}
-					displayIndex={request.status === 'waiting' ? index + 1 : index - waitingCount + 1}
+				<RequestsListItem
+					data={{ ...request, author: request.viewerName }}
+					index={request.status === 'waiting' ? index + 1 : null}
 					{disabled}
 					{dragDisabled}
 					onActivate={() => onActivate(request.id)}
@@ -104,6 +101,7 @@
 				<div class="requests-list__drag-overlay">
 					<RequestsListItem
 						data={{ ...dragged, author: dragged.viewerName }}
+						preview={true}
 						index={items
 							.filter((item) => item.status === dragged.status)
 							.findIndex((item) => item.id === dragged.id) + 1}
